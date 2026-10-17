@@ -1,1227 +1,2298 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>조선힙스터 행렬악단</title>
-    <!-- 모바일 앱 설치 및 전체화면 설정 -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="조선힙스터">
-    <meta name="theme-color" content="#0b0d16">
-
-    <style>
-        :root {
-            --bg-day-sky: linear-gradient(to bottom, #7ec8e3, #f3e5ab);
-            --bg-afternoon-sky: linear-gradient(to bottom, #ff7e5f, #feb47b);
-            --bg-night-sky: linear-gradient(to bottom, #0b0d16, #1a237e);
-            
-            --road-day: #d2b48c;
-            --road-afternoon: #c88a58;
-            --road-night: #252229;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-touch-callout: none;
-        }
-
-        html, body {
-            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-            background-color: #0b0d16;
-            color: #fff;
-            overflow: hidden;
-            width: 100vw;
-            height: 100dvh; /* 모바일 주소창 제외한 실제 높이 고정 */
-            position: fixed;
-            top: 0;
-            left: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #game-container {
-            width: 100%;
-            max-width: 820px; /* 아이패드 에어4 및 모바일 대응 폭 */
-            height: 100dvh;
-            position: relative;
-            overflow: hidden;
-            background: #0b0d16;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* 공통 화면 전환 */
-        .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            z-index: 10;
-        }
-
-        .screen.hidden {
-            display: none !important;
-        }
-
-        /* ==========================================
-           1. 타이틀 화면 (시간대 선정은 이곳에서만 가능)
-           ========================================== */
-        #title-screen {
-            background: var(--bg-day-sky);
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .title-overlay {
-            width: 100%;
-            max-width: 420px;
-            background: rgba(11, 13, 22, 0.78);
-            backdrop-filter: blur(6px);
-            padding: 28px 20px;
-            border-radius: 16px;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .title-logo-img {
-            max-width: 90%;
-            max-height: 110px;
-            object-fit: contain;
-            margin-bottom: 10px;
-        }
-
-        h1.game-title {
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: #FFD700;
-            text-shadow: 2px 2px 0px #8B0000;
-            margin-bottom: 6px;
-            letter-spacing: 1px;
-        }
-
-        p.game-subtitle {
-            font-size: 0.9rem;
-            color: #ddd;
-            margin-bottom: 24px;
-        }
-
-        .settings-panel {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-
-        .setting-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .setting-group label {
-            font-size: 0.85rem;
-            color: #FFD700;
-            font-weight: bold;
-        }
-
-        .option-btns {
-            display: flex;
-            gap: 6px;
-            width: 100%;
-            justify-content: center;
-        }
-
-        .opt-btn {
-            flex: 1;
-            padding: 8px 6px;
-            font-size: 0.8rem;
-            border: 1px solid #666;
-            background: rgba(0, 0, 0, 0.5);
-            color: #bbb;
-            cursor: pointer;
-            border-radius: 6px;
-        }
-
-        .opt-btn.active {
-            background: #FFD700;
-            color: #000;
-            border-color: #FFD700;
-            font-weight: bold;
-        }
-
-        .menu-box {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
-        }
-
-        .btn {
-            padding: 12px 18px;
-            font-size: 1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .btn-primary {
-            background-color: #B22222;
-            color: white;
-            border: 1px solid #FF6347;
-        }
-
-        .btn-secondary {
-            background-color: #2c2f3e;
-            color: #ddd;
-            border: 1px solid #555;
-        }
-
-        /* ==========================================
-           2. 모바일 최적화 인게임 플레이 화면 (100dvh 고정 분할)
-           ========================================== */
-        #play-screen {
-            background: #121521;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100dvh;
-            padding-top: env(safe-area-inset-top, 0px);
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-        }
-
-        /* [상단 컨트롤 영역] 약 20~22% 높이 차지 */
-        #top-ui-zone {
-            flex: 0 0 auto;
-            background: #161925;
-            padding: 6px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            border-bottom: 1px solid #2e3346;
-            z-index: 5;
-        }
-
-        /* 1줄: 타이틀로 버튼 + 조선힙스터 행렬악단 타이틀 + 타이머 */
-        .top-row-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .small-btn {
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            background: #2c2f3e;
-            color: #eee;
-            border: 1px solid #555;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .ingame-title {
-            font-size: 1rem;
-            font-weight: 900;
-            color: #FFD700;
-            letter-spacing: 0.5px;
-        }
-
-        .ingame-title-img {
-            height: 22px;
-            object-fit: contain;
-        }
-
-        .timer-badge {
-            font-family: monospace;
-            font-size: 0.85rem;
-            background: rgba(0,0,0,0.5);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #FFD700;
-            border: 1px solid rgba(255,215,0,0.3);
-        }
-
-        /* 2줄: 흥 게이지 바 */
-        .top-row-hype {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .hype-label {
-            font-size: 0.75rem;
-            color: #FFD700;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .hype-bar-bg {
-            flex: 1;
-            height: 10px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 5px;
-            overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .hype-bar-fill {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, #FF4500, #FFD700);
-            transition: width 0.3s ease;
-        }
-
-        /* 3줄: 장단 버튼, 얼씨구 버튼, 초기화 버튼 (시간대 토글 제거됨) */
-        .top-row-actions {
-            display: flex;
-            gap: 5px;
-            justify-content: space-between;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 5px 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #232736;
-            color: #ddd;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .action-btn.chant-btn {
-            background: #8B0000;
-            color: #FFD700;
-            border-color: #FFD700;
-        }
-
-        /* 4줄: 알림 문구 위젯 (버튼들 아래, 행렬 화면 바로 위에 위치하여 행렬을 가리지 않음) */
-        #notice-banner {
-            width: 100%;
-            background: rgba(255, 215, 0, 0.12);
-            border: 1px solid rgba(255, 215, 0, 0.4);
-            color: #FFE4B5;
-            font-size: 0.78rem;
-            font-weight: bold;
-            text-align: center;
-            padding: 4px 8px;
-            border-radius: 4px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        /* [중앙 행렬 화면 영역] 모바일 세로 화면의 약 40% 넓이를 온전히 확보 */
-        #procession-viewport {
-            height: 40dvh;
-            min-height: 210px;
-            max-height: 360px;
-            width: 100%;
-            position: relative;
-            overflow: hidden;
-            background: var(--bg-day-sky);
-            border-bottom: 3px solid #5c4033;
-        }
-
-        /* 배경 기와집 및 왕궁 연출 */
-        .scenery-layer {
-            position: absolute;
-            top: 12px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.55);
-            font-weight: bold;
-            pointer-events: none;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.6);
-        }
-
-        /* 행렬 5인 슬롯 스테이지 */
-        #band-stage {
-            position: absolute;
-            bottom: 24px;
-            left: 0;
-            width: 100%;
-            height: calc(100% - 30px);
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
-            padding: 0 6px;
-            z-index: 3;
-        }
-
-        /* 각 위치 슬롯 (1~5번) */
-        .slot-wrapper {
-            width: 19%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            align-items: center;
-            position: relative;
-        }
-
-        /* 빈 공간의 바닥 원 (대열 자막 제거, 원 형태만 유지) */
-        .floor-circle {
-            width: 46px;
-            height: 18px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.35);
-            border: 2px dashed rgba(255, 255, 255, 0.5);
-            margin-bottom: 26px; /* 발 아래 버튼 높이와 맞춤 */
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        /* 배치/이동 가능할 때 바닥 원 깜빡임 */
-        .floor-circle.blink-slot {
-            background: rgba(255, 215, 0, 0.45);
-            border: 2px solid #FFD700;
-            box-shadow: 0 0 12px #FFD700;
-            animation: slotBlink 0.55s infinite alternate;
-        }
-
-        @keyframes slotBlink {
-            0% { transform: scale(0.92); opacity: 0.7; }
-            100% { transform: scale(1.12); opacity: 1; }
-        }
-
-        /* 배치된 캐릭터 카드 */
-        .character-unit {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-        }
-
-        .character-unit.playing-bounce .char-visual {
-            animation: charBounce 0.5s infinite alternate ease-in-out;
-        }
-
-        @keyframes charBounce {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-8px); }
-        }
-
-        /* 이동 대상일 때 캐릭터 깜빡임 */
-        .character-unit.blink-target .char-visual {
-            filter: drop-shadow(0 0 8px #00BFFF);
-            animation: slotBlink 0.55s infinite alternate;
-            cursor: pointer;
-        }
-
-        .char-visual {
-            width: 54px;
-            height: 96px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-end;
-            cursor: pointer;
-        }
-
-        .char-custom-img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        /* 기본 플랫 일러스트 도형 */
-        .avatar-body {
-            border-radius: 8px 8px 0 0;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.4);
-        }
-
-        .avatar-head {
-            width: 28px;
-            height: 28px;
-            background: #FFD1A9;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.95rem;
-            margin-bottom: -2px;
-            z-index: 2;
-        }
-
-        .char-buk .avatar-body { width: 46px; height: 60px; background: #8B0000; }
-        .char-kkwaeng .avatar-body { width: 34px; height: 68px; background: #DAA520; }
-        .char-gayageum .avatar-body { width: 38px; height: 64px; background: #1E3F66; }
-        .char-haegeum .avatar-body { width: 36px; height: 60px; background: #C71585; }
-        .char-taepyeongso .avatar-body { width: 34px; height: 56px; background: #2E8B57; }
-
-        /* 발 아래 S / M / ↔ 버튼 */
-        .underfoot-controls {
-            display: flex;
-            gap: 2px;
-            margin-top: 4px;
-            z-index: 4;
-        }
-
-        .uf-btn {
-            width: 21px;
-            height: 21px;
-            font-size: 0.65rem;
-            font-weight: bold;
-            border: 1px solid rgba(255,255,255,0.45);
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.75);
-            color: #ccc;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .uf-btn.active-solo {
-            background: #FFD700;
-            color: #000;
-            border-color: #FFD700;
-        }
-
-        .uf-btn.active-mute {
-            background: #B22222;
-            color: #fff;
-            border-color: #FF4500;
-        }
-
-        .uf-btn.active-move {
-            background: #00BFFF;
-            color: #000;
-            border-color: #fff;
-        }
-
-        #road-floor {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 24px;
-            background-color: var(--road-day);
-            border-top: 2px solid #6b4423;
-            z-index: 2;
-        }
-
-        /* [하단 연주자 선택 버튼 영역] 설명 제거, 컴팩트한 5버튼 구역 */
-        #bottom-roster-zone {
-            flex: 1;
-            background: #121521;
-            padding: 8px 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .roster-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 6px;
-            width: 100%;
-            height: 100%;
-            max-height: 115px;
-        }
-
-        /* 연주자 버튼: 이모지 + 북(buk) + "둥-! 더러러" 만 표시 */
-        .roster-btn {
-            background: #1e2233;
-            border: 1.5px solid #3d4460;
-            border-radius: 8px;
-            padding: 6px 2px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            color: #fff;
-            transition: all 0.2s;
-        }
-
-        /* 이미 대열에 배치된 연주자 버튼 표시 */
-        .roster-btn.placed {
-            background: #141722;
-            border-color: #2a2e42;
-            opacity: 0.65;
-        }
-
-        /* 선택되었거나 빈 공간 클릭 후 추가 대기 중일 때 깜빡임 */
-        .roster-btn.blink-roster {
-            border-color: #FFD700;
-            background: rgba(255, 215, 0, 0.2);
-            box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-            animation: rosterBlink 0.55s infinite alternate;
-        }
-
-        @keyframes rosterBlink {
-            0% { transform: scale(0.96); }
-            100% { transform: scale(1.03); }
-        }
-
-        .r-emoji {
-            font-size: 1.35rem;
-        }
-
-        .r-name {
-            font-size: 0.72rem;
-            font-weight: bold;
-            color: #FFD700;
-            text-align: center;
-            word-break: keep-all;
-        }
-
-        .r-sound {
-            font-size: 0.65rem;
-            color: #aaa;
-            text-align: center;
-        }
-
-        /* ==========================================
-           3. 모달 화면 (게임 방법 / 피날레 엔딩)
-           ========================================== */
-        .modal-screen {
-            background: rgba(11, 13, 22, 0.94);
-            z-index: 20;
-            padding: 20px;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .modal-box {
-            width: 100%;
-            max-width: 440px;
-            background: #1a1e2e;
-            padding: 24px 18px;
-            border-radius: 14px;
-            border: 1px solid #FFD700;
-        }
-
-        .modal-box h2 {
-            color: #FFD700;
-            font-size: 1.4rem;
-            margin-bottom: 14px;
-        }
-
-        .modal-box ul {
-            text-align: left;
-            margin-left: 18px;
-            margin-bottom: 20px;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            color: #ddd;
-        }
-
-        .ending-desc {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            color: #eee;
-            margin-bottom: 20px;
-            padding: 14px;
-            background: rgba(255,255,255,0.06);
-            border-radius: 8px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>조선힙스터 행렬악단 V3</title>
+  <!-- 모바일 앱(PWA) 설치 및 전체화면 설정 -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="조선힙스터">
+  <meta name="theme-color" content="#0c0e17">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 외부 에셋 설정 파일 로드 (파일이 없어도 기본값으로 안전하게 작동하도록 설계됨) -->
+  <script src="assets.js" onerror="console.log('기본 내장 에셋 모드로 구동합니다.')"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Pretendard:wght@400;500;600&display=swap');
+
+    :root {
+      --bg-dark: #0c0e17;
+      --panel-bg: #151928;
+      --accent-gold: #ffd166;
+      --accent-red: #ef476f;
+      --accent-cyan: #06d6a0;
+      --accent-blue: #118ab2;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background-color: var(--bg-dark);
+      color: #f8f9fa;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden; /* 모바일 화면 초과 스크롤 완벽 차단 */
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .serif-title {
+      font-family: 'Gowun Batang', serif;
+    }
+
+    /* 전체 앱 컨테이너 (아이폰 16, 아이패드 에어4 및 데스크톱 대응 고정 뷰) */
+    .app-wrapper {
+      width: 100%;
+      max-width: 1024px;
+      height: 100dvh;
+      padding: max(6px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom)) 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    /* 행렬 캔버스 스테이지 컨테이너: 모바일 세로 화면의 약 40% 높이 보장 */
+    .stage-container {
+      position: relative;
+      width: 100%;
+      height: 40dvh;
+      min-height: 195px;
+      max-height: 440px;
+      flex-shrink: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75);
+      border: 1px solid rgba(255, 209, 102, 0.28);
+      background: #090b12;
+    }
+
+    @media (min-width: 768px) {
+      .stage-container {
+        height: 48dvh;
+      }
+    }
+
+    canvas#gameCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center bottom;
+      transition: filter 0.6s ease;
+    }
+
+    canvas#gameCanvas.blurred {
+      filter: blur(7px) brightness(0.72);
+      transform: scale(1.03);
+    }
+
+    /* 최초 타이틀 화면은 화면 전체를 덮도록 설정 */
+    .title-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+      background: radial-gradient(circle at center, rgba(12, 14, 23, 0.55) 0%, rgba(8, 10, 18, 0.92) 100%);
+      backdrop-filter: blur(5px);
+      transition: opacity 0.45s ease;
+    }
+
+    .title-overlay.hidden-screen {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* 캐릭터 발밑 조작 레이어 (S / M / ↔ 및 빈 대열 클릭 영역) */
+    .underfoot-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    /* 빈 대열(바닥 원) 클릭용 투명 인터랙션 버튼 */
+    .empty-slot-hit {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      width: 16%;
+      max-width: 90px;
+      height: 54px;
+      border-radius: 999px;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    .slot-controls {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 3px;
+      pointer-events: auto;
+      opacity: 0.88;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      background: rgba(10, 12, 20, 0.82);
+      padding: 3px 5px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .slot-controls:hover,
+    .slot-controls.has-active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1.05);
+      border-color: rgba(255, 209, 102, 0.65);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+    }
+
+    /* 이동 대상이 된 연주자 슬롯 깜빡임 */
+    .slot-controls.target-blink {
+      border-color: #06d6a0;
+      box-shadow: 0 0 14px rgba(6, 214, 160, 0.9);
+      animation: pulseTarget 0.55s infinite alternate;
+    }
+
+    .foot-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      font-size: 0.65rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      background: #1f243a;
+      color: #ced4da;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      transition: all 0.15s ease;
+    }
+
+    @media (min-width: 640px) {
+      .foot-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.72rem;
+      }
+      .slot-controls {
+        gap: 5px;
+        padding: 4px 7px;
+      }
+    }
+
+    .foot-btn:hover {
+      background: #32395c;
+      color: #fff;
+      border-color: #ffd166;
+    }
+
+    .foot-btn.active-solo {
+      background: #ffd166;
+      color: #111;
+      border-color: #ffd166;
+      box-shadow: 0 0 10px rgba(255, 209, 102, 0.7);
+    }
+
+    .foot-btn.active-mute {
+      background: #ef476f;
+      color: #fff;
+      border-color: #ef476f;
+      box-shadow: 0 0 10px rgba(239, 71, 111, 0.7);
+    }
+
+    .foot-btn.active-swap {
+      background: #06d6a0;
+      color: #09121a;
+      border-color: #06d6a0;
+      box-shadow: 0 0 12px rgba(6, 214, 160, 0.85);
+      animation: pulseSwap 0.55s infinite alternate;
+    }
+
+    @keyframes pulseSwap {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.16); }
+    }
+
+    @keyframes pulseTarget {
+      0% { transform: translate(-50%, -50%) scale(0.96); }
+      100% { transform: translate(-50%, -50%) scale(1.1); }
+    }
+
+    /* 하단 연주자 카드 (이모지, 이름, 구음만 남기고 높이 최적화) */
+    .inst-card {
+      background: #1d2238;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 6px 4px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .inst-card:hover {
+      background: #262d4a;
+      border-color: rgba(255, 209, 102, 0.4);
+    }
+
+    .inst-card.active {
+      border-color: #ffd166;
+      background: rgba(255, 209, 102, 0.13);
+      box-shadow: 0 0 12px rgba(255, 209, 102, 0.22);
+    }
+
+    /* 선택 대기 또는 빈 공간 클릭 시 연주자 버튼 깜빡임 */
+    .inst-card.blink-card {
+      border-color: #06d6a0;
+      background: rgba(6, 214, 160, 0.18);
+      box-shadow: 0 0 15px rgba(6, 214, 160, 0.65);
+      animation: cardBlink 0.55s infinite alternate;
+    }
+
+    @keyframes cardBlink {
+      0% { transform: scale(0.96); }
+      100% { transform: scale(1.03); }
+    }
+
+    em {
+      font-style: italic;
+      color: #ffd166;
+    }
+  </style>
 </head>
 <body>
 
-    <div id="game-container">
+  <!-- 최초 타이틀 화면 오버레이 (시간대 무드는 오직 이곳에서만 선정 가능) -->
+  <div id="titleOverlay" class="title-overlay p-5">
+    <div class="text-center max-w-xl w-full">
+      <span class="inline-block px-3 py-1 rounded-full bg-amber-300/15 border border-amber-300/40 text-amber-200 text-xs mb-3">
+        조선 의궤 행렬도 & 국악 비트박스 인터랙티브 사운드 게임
+      </span>
+      <div id="mainTitleLogoArea" class="mb-2 flex justify-center">
+        <h2 class="serif-title text-3xl sm:text-6xl text-amber-300 drop-shadow-[0_4px_24px_rgba(255,209,102,0.45)] tracking-wide">
+          조선힙스터 행렬악단
+        </h2>
+      </div>
+      <p class="text-xs sm:text-base text-slate-200 mb-6 leading-relaxed">
+        흩날리는 도포 자락과 여섯 악기의 개성 넘치는 시김새로 종로 거리의 <em>흥(興)</em>을 깨우고 왕궁 대문 앞 마당놀이 피날레를 완성하시오.
+      </p>
 
-        <!-- 1. 최초 타이틀 화면 (시간대 선택은 이곳에서만 가능) -->
-        <div id="title-screen" class="screen">
-            <div class="title-overlay">
-                <div id="main-title-wrapper">
-                    <h1 class="game-title">조선힙스터 행렬악단</h1>
-                </div>
-                <p class="game-subtitle">종로 시전 거리에서 광화문까지의 풍물 유흥 행렬</p>
-                
-                <div class="settings-panel">
-                    <div class="setting-group">
-                        <label>출정 시각(시간대) 택일</label>
-                        <div class="option-btns" id="theme-btn-group">
-                            <button class="opt-btn active" onclick="selectInitialTheme('day', this)">☀️ 오시(낮)</button>
-                            <button class="opt-btn" onclick="selectInitialTheme('afternoon', this)">🌅 신시(오후)</button>
-                            <button class="opt-btn" onclick="selectInitialTheme('night', this)">🌙 자시(밤)</button>
-                        </div>
-                    </div>
-                    <div class="setting-group">
-                        <label>행렬 난이도</label>
-                        <div class="option-btns" id="diff-btn-group">
-                            <button class="opt-btn active" onclick="selectDifficulty('easy', this)">쉬움</button>
-                            <button class="opt-btn" onclick="selectDifficulty('hard', this)">어려움</button>
-                        </div>
-                    </div>
-                </div>
+      <!-- 최초 타이틀 전용 시간대 무드 선택 (오시 / 신시 / 자시) -->
+      <div class="mb-6 inline-flex flex-col sm:flex-row items-center gap-2 bg-slate-950/90 px-4 py-2.5 rounded-xl border border-amber-300/30">
+        <span class="text-xs text-amber-200">출정 시각(시간대)</span>
+        <div class="flex gap-1.5">
+          <button data-time="day" class="time-select-btn px-3 py-1 rounded-lg text-xs border border-transparent transition">☀️ 오시 (낮)</button>
+          <button data-time="afternoon" class="time-select-btn px-3 py-1 rounded-lg text-xs border border-transparent transition">🌅 신시 (오후)</button>
+          <button data-time="night" class="time-select-btn px-3 py-1 rounded-lg text-xs border border-transparent transition">🌙 자시 (밤)</button>
+        </div>
+      </div>
 
-                <div class="menu-box">
-                    <button class="btn btn-primary" onclick="startGame()">게임 시작</button>
-                    <button class="btn btn-secondary" onclick="openHowTo()">게임 방법</button>
-                </div>
+      <div id="titleMainButtons" class="flex justify-center gap-3">
+        <button id="openDiffBtn" class="px-7 py-3 rounded-xl bg-gradient-to-r from-amber-300 to-amber-500 text-slate-950 text-sm sm:text-base shadow-[0_0_25px_rgba(255,209,102,0.5)] hover:scale-105 transition">
+          게임 시작
+        </button>
+        <button id="openHowToBtn" class="px-6 py-3 rounded-xl bg-slate-900/85 hover:bg-slate-800 text-slate-100 border border-amber-300/40 text-sm sm:text-base transition">
+          게임 방법
+        </button>
+      </div>
+
+      <div id="difficultyBox" class="hidden flex-col items-center gap-3 mt-2 bg-slate-950/90 p-4 rounded-2xl border border-amber-300/40">
+        <p class="text-xs sm:text-sm text-amber-200 mb-1">행렬 난이도를 택하시오 (흥 게이지 상승 속도 및 목표 시간 조절)</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full">
+          <button id="startEasyBtn" class="p-3.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-400/50 text-left transition group">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm sm:text-base text-emerald-300">쉬움 (풍류 유람)</span>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-400/20 text-emerald-200">최단 3분 · 평균 5분</span>
             </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              소규모 악기 편성으로도 거리의 흥이 완만하게 오르며, 다양한 악기 조합을 여유롭게 실험할 수 있소.
+            </p>
+          </button>
+
+          <button id="startHardBtn" class="p-3.5 rounded-xl bg-rose-950/70 hover:bg-rose-900/80 border border-rose-400/50 text-left transition group">
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-sm sm:text-base text-rose-300">어려움 (어의궤 명인)</span>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-rose-400/20 text-rose-200">최단 5분 · 평균 8~9분</span>
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed">
+              장단과 선율의 치밀한 조화, 선두 교체와 적절한 추임새를 꾸준히 이어가야 왕궁 피날레에 당도하오.
+            </p>
+          </button>
+        </div>
+        <button id="cancelDiffBtn" class="text-xs text-slate-400 hover:text-slate-200 mt-1 underline">
+          뒤로 가기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 게임 방법 모달 (요청에 따라 설명 단어는 기존과 동일하게 유지) -->
+  <div id="howToModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-amber-300/40 rounded-2xl max-w-lg w-full p-5 space-y-3">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+        <h3 class="serif-title text-lg sm:text-xl text-amber-300">게임 방법 및 행렬 지휘 안내</h3>
+        <button id="closeHowToBtn" class="text-slate-400 hover:text-white text-sm">✕ 닫기</button>
+      </div>
+      <div class="space-y-2.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
+        <p>1. <em>악기 자유 배치 및 편성:</em> 하단의 악기 카드를 누르면 깜빡이는 빈 대열(바닥 원) 중 원하는 위치를 눌러 배치할 수 있습니다. 반대로 빈 바닥 원을 먼저 누른 뒤 깜빡이는 악기 카드를 눌러도 그 위치에 즉시 합류합니다.</p>
+        <p>2. <em>발 아래 컨트롤 버튼 (S / M / ↔):</em> 각 캐릭터 발밑에 있는 3개의 원형 버튼을 조작해 보세요.
+          <br>· <em>S (솔로):</em> 여러 연주자의 S 버튼을 동시에 눌러 원하는 악기들만 함께 독주(다중 솔로)시킬 수 있습니다.
+          <br>· <em>M (뮤트):</em> 대열을 유지한 채 잠시 연주를 멈춥니다.
+          <br>· <em>↔ (위치변경):</em> 연주자의 <em>↔</em> 버튼을 누른 뒤, 깜빡이는 다른 연주자나 빈 바닥 원을 누르면 자리를 맞바꾸거나 빈 공간으로 이동합니다.</p>
+        <p>3. <em>왕궁 대문 피날레 엔딩:</em> 흥 게이지가 100%에 도달하면 광화문 대문이 등장하며 행렬이 대문 앞에 멈춰 서서 <em>4마디 피날레 합주</em>를 펼친 뒤 대박이 터집니다.</p>
+      </div>
+      <div class="pt-2 text-right">
+        <button id="confirmHowToBtn" class="px-5 py-2 rounded-lg bg-amber-300 text-slate-950 text-xs">확인했습니다</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 메인 앱 레이아웃 (상단 조작부 및 알림창 ➔ 중앙 40% 행렬 화면 ➔ 하단 연주자 버튼) -->
+  <div class="app-wrapper">
+
+    <!-- [1] 상단 영역: 타이틀로 버튼, 메인 타이틀, 장단·얼씨구·초기화 버튼 + 그 바로 아래 흥 게이지 및 알림 문구 -->
+    <header class="w-full flex flex-col gap-1.5 flex-shrink-0">
+      <!-- 1열: 타이틀로 버튼 + 메인 타이틀 + 장단/얼씨구/초기화 버튼 (인게임 시간대 토글 제거됨) -->
+      <div class="flex flex-wrap justify-between items-center gap-1.5 pb-1.5 border-b border-amber-300/20">
+        <div class="flex items-center gap-2">
+          <button id="backToTitleBtn" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] sm:text-xs text-amber-200 border border-amber-300/30 transition">
+            ◀ 타이틀로
+          </button>
+          <div id="headerTitleLogoArea">
+            <h1 class="serif-title text-sm sm:text-lg text-amber-300 tracking-tight">조선힙스터 행렬악단</h1>
+          </div>
         </div>
 
-        <!-- 게임 방법 모달 (설명 단어 유지) -->
-        <div id="howto-screen" class="screen modal-screen hidden">
-            <div class="modal-box">
-                <h2>게임 방법</h2>
-                <ul>
-                    <li><strong>연주자 배치:</strong> 하단의 악기 버튼을 누른 뒤 깜빡이는 빈 공간(바닥 원)을 누르면 원하는 위치에 배치됩니다. 반대로 빈 공간을 먼저 누른 뒤 깜빡이는 악기 버튼을 눌러도 배치됩니다.</li>
-                    <li><strong>발 아래 버튼:</strong> <strong>[S]</strong>는 솔로(여러 악기 동시 선택 가능), <strong>[M]</strong>은 뮤트(음소거), <strong>[↔]</strong>는 위치 이동 및 맞교환입니다.</li>
-                    <li><strong>위치 이동:</strong> 배치된 연주자의 <strong>[↔]</strong> 버튼을 누른 후, 빈 바닥 원을 누르면 그곳으로 이동하고 다른 연주자를 누르면 자리를 맞바꿉니다.</li>
-                    <li><strong>목표:</strong> 신명 나는 합주로 흥(興) 게이지를 100%까지 채워 왕궁 대문 피날레를 달성하세요!</li>
-                </ul>
-                <button class="btn btn-primary" style="width:100%;" onclick="closeHowTo()">돌아가기</button>
-            </div>
+        <div class="flex items-center gap-1.5">
+          <button id="rhythmBtn" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:border-amber-300 border border-slate-600 text-[11px] sm:text-xs transition">
+            장단: <em>중모리 붐뱁</em>
+          </button>
+          <button id="chuimsaeBtn" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-amber-300 to-rose-500 text-slate-950 text-[11px] sm:text-xs shadow active:scale-95 transition">
+            얼씨구!
+          </button>
+          <button id="clearBtn" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-rose-950/60 border border-slate-600 text-[11px] sm:text-xs text-slate-300 transition">
+            초기화
+          </button>
+        </div>
+      </div>
+
+      <!-- 2열: 행렬 화면을 절대 가리지 않도록 상단 버튼 바로 아래, 행렬 화면 바로 위에 배치된 알림 문구 & 흥 게이지 바 -->
+      <div class="grid grid-cols-1 sm:grid-cols-12 gap-1.5 items-center">
+        <!-- 알림 문구 위젯 -->
+        <div id="narrativeBox" class="sm:col-span-7 bg-slate-950/90 border-l-4 border-amber-300 border-t border-r border-b border-white/10 px-2.5 py-1.5 rounded-lg shadow">
+          <div class="flex items-center justify-between gap-1 mb-0.5">
+            <span id="narrativeTag" class="text-[10px] sm:text-[11px] text-amber-300">[거리 분위기 · 행렬 준비]</span>
+            <span id="swapStatusBadge" class="hidden text-[10px] px-1.5 py-0.2 rounded bg-emerald-400/20 text-emerald-300 border border-emerald-400/40">
+              반짝이는 자리나 악공을 택하시오
+            </span>
+          </div>
+          <p id="narrativeText" class="text-[11px] sm:text-xs text-white leading-tight truncate">
+            아래 악기 패를 택하거나 빈자리를 눌러 행렬을 세우시오.
+          </p>
         </div>
 
-        <!-- 2. 인게임 플레이 화면 (모바일 고정 뷰) -->
-        <div id="play-screen" class="screen hidden">
-            
-            <!-- 상단 UI 구역 (아이폰 상반신 최상단: 타이틀로 / 메인타이틀 / 장단·얼씨구·초기화 / 알림 문구) -->
-            <div id="top-ui-zone">
-                <div class="top-row-header">
-                    <button class="small-btn" onclick="returnToTitle()">타이틀로</button>
-                    <div id="ingame-title-wrapper">
-                        <span class="ingame-title">조선힙스터 행렬악단</span>
-                    </div>
-                    <span id="game-timer" class="timer-badge">00:00</span>
-                </div>
-
-                <div class="top-row-hype">
-                    <span class="hype-label">흥(興) <span id="hype-text">0%</span></span>
-                    <div class="hype-bar-bg">
-                        <div id="hype-fill" class="hype-bar-fill"></div>
-                    </div>
-                </div>
-
-                <div class="top-row-actions">
-                    <button class="action-btn" id="rhythm-btn" onclick="toggleRhythmTempo()">장단: 자진모리</button>
-                    <button class="action-btn chant-btn" onclick="triggerChant()">얼씨구!</button>
-                    <button class="action-btn" onclick="resetFormation()">초기화</button>
-                </div>
-
-                <!-- 행렬 화면을 가리지 않고 상단 버튼 바로 아래에 위치하는 조선시대풍 알림 위젯 -->
-                <div id="notice-banner">악공을 택하여 행렬의 빈자리에 세우시오.</div>
+        <!-- 흥 게이지 위젯 -->
+        <div class="sm:col-span-5 bg-slate-950/90 border border-amber-300/35 px-2.5 py-1.5 rounded-lg shadow">
+          <div class="flex justify-between items-center text-[11px] mb-1">
+            <span class="text-amber-300">종로 관중 흥(興)</span>
+            <div class="flex items-center gap-1.5">
+              <span id="diffBadge" class="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300">쉬움</span>
+              <span id="timerText" class="text-[10px] text-slate-300">00:00</span>
+              <span id="heungPercent" class="text-amber-200">0.0%</span>
             </div>
-
-            <!-- 중앙 행렬 화면 (휴대폰 세로 화면의 약 40% 높이 고정) -->
-            <div id="procession-viewport">
-                <div class="scenery-layer" id="scenery-text">🏛️ 종로 시전 행랑 거리 행진 중 🏛️</div>
-                
-                <!-- 5개의 자유 배치 슬롯 (대열1~5 자막 제거됨) -->
-                <div id="band-stage"></div>
-
-                <div id="road-floor"></div>
-            </div>
-
-            <!-- 하단 연주자 선택 버튼 구역 ("악기 편성 도크" 등 설명 제거, 이모지+이름+의성어만 유지) -->
-            <div id="bottom-roster-zone">
-                <div class="roster-grid" id="roster-grid"></div>
-            </div>
-
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-white/10">
+            <div id="heungBar" class="h-full w-0 bg-gradient-to-r from-emerald-400 via-amber-300 to-rose-500 transition-all duration-300"></div>
+          </div>
+          <div id="finaleStepNotice" class="hidden text-[10px] text-amber-200 mt-1 text-center">
+            🏯 왕궁 대문 앞 피날레 연주 중 (1 / 4 마디)
+          </div>
         </div>
+      </div>
+    </header>
 
-        <!-- 3. 피날레 엔딩 화면 -->
-        <div id="ending-screen" class="screen modal-screen hidden">
-            <div class="modal-box">
-                <h2 id="ending-title-text">🎉 광화문 대문 당도! 🎉</h2>
-                <div class="ending-desc" id="ending-desc-text"></div>
-                <button class="btn btn-primary" style="width:100%;" onclick="returnToTitle()">타이틀로 돌아가기</button>
-            </div>
-        </div>
-
+    <!-- [2] 중앙 행렬 화면 영역 (모바일 세로 화면의 약 40% 높이 차지, 위젯에 가려지지 않고 온전히 노출) -->
+    <div class="stage-container">
+      <canvas id="gameCanvas" width="1024" height="460" class="blurred"></canvas>
+      <!-- 발밑 S / M / ↔ 버튼 및 빈 공간 터치 레이어 -->
+      <div id="underfootLayer" class="underfoot-layer"></div>
     </div>
 
-    <!-- 분리된 에셋 및 사운드 엔진 파일 불러오기 -->
-    <script src="assets.js"></script>
+    <!-- [3] 하단 연주자 선택 도크 ("악기 편성 도크..." 설명 제거, 이모지 + 악기명 + 구음만 표시) -->
+    <section class="w-full bg-[#151928] p-2 rounded-xl border border-white/10 flex-shrink-0">
+      <div id="instrumentGrid" class="grid grid-cols-3 sm:grid-cols-6 gap-1.5"></div>
+    </section>
 
-    <script>
-        // 5인 악공 마스터 데이터 (요청사항: 이모지, 북(buk), "둥-! 더러러" 외 캐릭터 설명 제거)
-        const MASTER_INSTRUMENTS = {
-            buk: { key: 'buk', emoji: '🥁', label: '북(buk)', soundText: '"둥-! 더러러"', cssType: 'char-buk' },
-            kkwaeng: { key: 'kkwaeng', emoji: '🔔', label: '꽹과리(kkwaeng)', soundText: '"갱- 개갱!"', cssType: 'char-kkwaeng' },
-            gayageum: { key: 'gayageum', emoji: '🪕', label: '가야금(gayageum)', soundText: '"징- 뜯어라"', cssType: 'char-gayageum' },
-            haegeum: { key: 'haegeum', emoji: '🎻', label: '해금(haegeum)', soundText: '"끼익- 앙!"', cssType: 'char-haegeum' },
-            taepyeongso: { key: 'taepyeongso', emoji: '🎺', label: '태평소(taepyeongso)', soundText: '"ire- 나발!"', cssType: 'char-taepyeongso' }
+  </div>
+
+  <!-- 피날레 엔딩 모달 -->
+  <div id="endingModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex flex-col justify-center items-center text-center p-5">
+    <div class="bg-slate-900/95 border-2 border-amber-300/50 rounded-2xl max-w-xl w-full p-5 shadow-[0_0_50px_rgba(255,209,102,0.3)]">
+      <span id="endingSubtitle" class="inline-block px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs mb-2">
+        왕궁 대문 4마디 피날레 및 대박 터뜨리기 완수!
+      </span>
+      <h2 id="endingTitle" class="serif-title text-xl sm:text-3xl text-amber-300 mb-2.5">
+        🎉 태평성대 마당놀이 피날레! 🎉
+      </h2>
+      <p id="endingBody" class="text-xs sm:text-sm text-slate-100 leading-relaxed mb-4 whitespace-pre-line"></p>
+
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-xs mb-4">
+        <div>
+          <span class="text-slate-400 block text-[10px]">도착 소요 시간</span>
+          <span id="statTime" class="text-amber-300 text-xs sm:text-sm">03:12</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block text-[10px]">얼씨구 추임새</span>
+          <span id="statChuimsae" class="text-emerald-300 text-xs sm:text-sm">0회</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block text-[10px]">대열·악기 변경</span>
+          <span id="statSwaps" class="text-sky-300 text-xs sm:text-sm">0회</span>
+        </div>
+        <div>
+          <span class="text-slate-400 block text-[10px]">최종 악단 편성</span>
+          <span id="statLineup" class="text-rose-300 text-[11px]">5인조</span>
+        </div>
+      </div>
+
+      <div class="flex justify-center gap-2.5">
+        <button id="continuePlayBtn" class="px-5 py-2 rounded-full bg-gradient-to-r from-amber-300 to-rose-500 text-slate-950 text-xs sm:text-sm shadow-lg hover:scale-105 transition">
+          행렬 계속 즐기기 (무한 풍류)
+        </button>
+        <button id="restartFromEndingBtn" class="px-4 py-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs sm:text-sm transition">
+          타이틀로 돌아가기
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// 기본 에셋 설정 폴백 (assets.js 미로드 시에도 안전하게 작동)
+const ASSETS = window.JOSEON_ASSETS || {
+  useCustomTitleLogo: false,
+  useCustomCharImages: {},
+  charImages: {},
+  useCustomAudio: {},
+  audioFiles: {}
+};
+
+// 커스텀 이미지 객체 캐시
+const loadedCharImages = {};
+function preloadCustomAssets() {
+  if (ASSETS.useCustomTitleLogo) {
+    if (ASSETS.titleLogoMain) {
+      document.getElementById('mainTitleLogoArea').innerHTML =
+        `<img src="${ASSETS.titleLogoMain}" alt="조선힙스터 행렬악단" class="max-h-24 sm:max-h-36 object-contain">`;
+    }
+    if (ASSETS.titleLogoSmall || ASSETS.titleLogoMain) {
+      const smallSrc = ASSETS.titleLogoSmall || ASSETS.titleLogoMain;
+      document.getElementById('headerTitleLogoArea').innerHTML =
+        `<img src="${smallSrc}" alt="조선힙스터 행렬악단" class="h-6 sm:h-8 object-contain">`;
+    }
+  }
+
+  Object.keys(ASSETS.useCustomCharImages || {}).forEach(id => {
+    if (ASSETS.useCustomCharImages[id] && ASSETS.charImages[id]) {
+      const img = new Image();
+      img.src = ASSETS.charImages[id];
+      loadedCharImages[id] = img;
+    }
+  });
+}
+preloadCustomAssets();
+
+const INSTRUMENTS = [
+  {
+    id: 'buk',
+    name: '북 (Buk)',
+    shortName: '북',
+    category: 'rhythm',
+    gueum: ['둥-!', '더러러', '쿵!', '덩덕!'],
+    color: '#ef476f',
+    robeColor: '#f8f9fa',
+    vestColor: '#d90429',
+    sashColor: '#ffb703',
+    icon: '🥁'
+  },
+  {
+    id: 'kkwaeng',
+    name: '꽹과리',
+    shortName: '꽹과리',
+    category: 'rhythm',
+    gueum: ['깽-!', '개갱!', '매기!', '더갱'],
+    color: '#ffd166',
+    robeColor: '#1d1e2c',
+    vestColor: '#3a0ca3',
+    sashColor: '#ef476f',
+    icon: '🪙'
+  },
+  {
+    id: 'gayageum',
+    name: '가야금',
+    shortName: '가야금',
+    category: 'melody',
+    gueum: ['징-', '기장-', '땅-', '지르르'],
+    color: '#38bdf8',
+    robeColor: '#1e3a8a',
+    vestColor: '#3b82f6',
+    sashColor: '#93c5fd',
+    icon: '🪕'
+  },
+  {
+    id: 'haegeum',
+    name: '해금',
+    shortName: '해금',
+    category: 'melody',
+    gueum: ['잉-!', '애앵~', '나니-', '히잉!'],
+    color: '#06d6a0',
+    robeColor: '#a7f3d0',
+    vestColor: '#059669',
+    sashColor: '#fb7185',
+    icon: '🎻'
+  },
+  {
+    id: 'taepyeongso',
+    name: '태평소',
+    shortName: '태평소',
+    category: 'melody',
+    gueum: ['나-!', '나니나!', '태평!', '삐리리'],
+    color: '#ff9f1c',
+    robeColor: '#fb923c',
+    vestColor: '#ea580c',
+    sashColor: '#fde047',
+    icon: '🎺'
+  },
+  {
+    id: 'joseon808',
+    name: '조선 808',
+    shortName: '조선808',
+    category: 'rhythm',
+    gueum: ['둠-!', '칙-탁!', '808!', '드랍!'],
+    color: '#c084fc',
+    robeColor: '#312e81',
+    vestColor: '#7c3aed',
+    sashColor: '#38bdf8',
+    icon: '🎛️'
+  }
+];
+
+class GugakAudioEngine {
+  constructor() {
+    this.ctx = null;
+    this.masterGain = null;
+    this.isPlaying = false;
+    this.step = 0;
+    this.mode = 'jungmori';
+    this.stepInterval = 175;
+    this.timer = null;
+    this.hypeTicks = 0;
+    this.sampleBuffers = {};
+  }
+
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 0.8;
+      this.masterGain.connect(this.ctx.destination);
+      this.loadCustomSamples();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  // 커스텀 오디오 파일이 설정된 경우 비동기 로드 (실패 시 기존 신디사이저 자동 유지)
+  loadCustomSamples() {
+    if (!ASSETS.useCustomAudio) return;
+    Object.entries(ASSETS.audioFiles || {}).forEach(([key, url]) => {
+      const instKey = key.startsWith('joseon808') ? 'joseon808' : key;
+      if (ASSETS.useCustomAudio[instKey] && url) {
+        fetch(url)
+          .then(res => res.arrayBuffer())
+          .then(buf => this.ctx.decodeAudioData(buf))
+          .then(decoded => { this.sampleBuffers[key] = decoded; })
+          .catch(() => console.log(`${url} 로드 실패, 내장 신디사이저 사운드를 유지합니다.`));
+      }
+    });
+  }
+
+  playSampleBuffer(bufferKey, dest, playbackRate = 1.0, volume = 0.85) {
+    const buf = this.sampleBuffers[bufferKey];
+    if (!buf) return false;
+    const src = this.ctx.createBufferSource();
+    const gain = this.ctx.createGain();
+    src.buffer = buf;
+    src.playbackRate.value = playbackRate;
+    gain.gain.value = volume;
+    src.connect(gain);
+    gain.connect(dest);
+    src.start(this.ctx.currentTime);
+    return true;
+  }
+
+  createChannel(slotIndex) {
+    const panner = this.ctx.createStereoPanner();
+    const norm = slotIndex / 4; // 0~4번 고정 슬롯 위치에 따른 좌우 스테레오 패닝
+    panner.pan.value = -0.65 + norm * 1.3;
+
+    const gain = this.ctx.createGain();
+    gain.gain.value = 0.75 + norm * 0.42;
+
+    gain.connect(panner);
+    panner.connect(this.masterGain);
+    return gain;
+  }
+
+  playBuk(dest, accent = false) {
+    if (ASSETS.useCustomAudio?.buk && this.playSampleBuffer('buk', dest, accent ? 1.0 : 0.92, accent ? 1.0 : 0.7)) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(accent ? 132 : 102, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.24);
+
+    gain.gain.setValueAtTime(accent ? 0.92 : 0.62, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.27);
+
+    osc.connect(gain);
+    gain.connect(dest);
+    osc.start(now);
+    osc.stop(now + 0.28);
+  }
+
+  playKkwaeng(dest, open = true) {
+    if (ASSETS.useCustomAudio?.kkwaeng && this.playSampleBuffer('kkwaeng', dest, open ? 1.0 : 1.15, open ? 0.9 : 0.6)) return;
+    const now = this.ctx.currentTime;
+    const freqs = [820, 1185, 1640, 2310];
+    const dur = open ? 0.24 : 0.08;
+
+    freqs.forEach((f, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = idx % 2 === 0 ? 'square' : 'sawtooth';
+      osc.frequency.setValueAtTime(f, now);
+      if (open) osc.frequency.linearRampToValueAtTime(f * 1.03, now + dur);
+
+      gain.gain.setValueAtTime(0.11 / (idx + 1), now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(now);
+      osc.stop(now + dur + 0.02);
+    });
+  }
+
+  playGayageum(dest, freq, nonghyeon = false) {
+    if (ASSETS.useCustomAudio?.gayageum && this.playSampleBuffer('gayageum', dest, freq / 293.66, 0.85)) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(freq, now);
+
+    if (nonghyeon) {
+      osc.frequency.setValueAtTime(freq, now + 0.06);
+      osc.frequency.linearRampToValueAtTime(freq * 1.06, now + 0.14);
+      osc.frequency.linearRampToValueAtTime(freq * 0.99, now + 0.24);
+      osc.frequency.linearRampToValueAtTime(freq * 1.03, now + 0.34);
+    }
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(2400, now);
+    filter.frequency.exponentialRampToValueAtTime(380, now + 0.42);
+
+    gain.gain.setValueAtTime(0.45, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+    osc.start(now);
+    osc.stop(now + 0.46);
+  }
+
+  playHaegeum(dest, startFreq, endFreq, dur = 0.32) {
+    if (ASSETS.useCustomAudio?.haegeum && this.playSampleBuffer('haegeum', dest, endFreq / 293.66, 0.85)) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const formant = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(startFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(endFreq, now + dur * 0.65);
+
+    formant.type = 'bandpass';
+    formant.frequency.setValueAtTime(1150, now);
+    formant.Q.value = 3.2;
+
+    gain.gain.setValueAtTime(0.01, now);
+    gain.gain.linearRampToValueAtTime(0.48, now + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+    osc.connect(formant);
+    formant.connect(gain);
+    gain.connect(dest);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+  }
+
+  playTaepyeongso(dest, freq, dur = 0.25) {
+    if (ASSETS.useCustomAudio?.taepyeongso && this.playSampleBuffer('taepyeongso', dest, freq / 293.66, 0.85)) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const filter = this.ctx.createBiquadFilter();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq * 0.95, now);
+    osc.frequency.linearRampToValueAtTime(freq, now + 0.04);
+    osc.frequency.linearRampToValueAtTime(freq * 1.03, now + dur * 0.7);
+
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1850, now);
+    filter.Q.value = 1.8;
+
+    gain.gain.setValueAtTime(0.32, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(dest);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+  }
+
+  play808(dest, type) {
+    if (ASSETS.useCustomAudio?.joseon808) {
+      const key = `joseon808_${type}`;
+      if (this.playSampleBuffer(key, dest, 1.0, 0.9)) return;
+    }
+    const now = this.ctx.currentTime;
+    if (type === 'kick') {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(34, now + 0.3);
+      gain.gain.setValueAtTime(0.85, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(now);
+      osc.stop(now + 0.33);
+    } else if (type === 'snare') {
+      const bufferSize = this.ctx.sampleRate * 0.12;
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.value = 700;
+      const gain = this.ctx.createGain();
+      gain.gain.setValueAtTime(0.45, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(dest);
+      noise.start(now);
+    } else {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(6200, now);
+      gain.gain.setValueAtTime(0.07, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(now);
+      osc.stop(now + 0.05);
+    }
+  }
+
+  triggerChuimsae() {
+    this.init();
+    this.hypeTicks = 12;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(587.33, now + 0.35);
+    gain.gain.setValueAtTime(0.42, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.62);
+  }
+
+  playGourdBurstFanfare() {
+    this.init();
+    const notes = [293.66, 349.23, 392.00, 440.00, 523.25, 587.33];
+    notes.forEach((f, idx) => {
+      setTimeout(() => {
+        const dest = this.createChannel(2);
+        this.playTaepyeongso(dest, f, 0.42);
+        this.playGayageum(dest, f / 2, true);
+        if (idx % 2 === 0) this.playBuk(dest, true);
+      }, idx * 125);
+    });
+  }
+}
+
+const audio = new GugakAudioEngine();
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const TIME_THEMES = {
+  day: {
+    skyTop: '#60a5fa',
+    skyBottom: '#fde68a',
+    sunColor: '#fffbeb',
+    sunGlow: 'rgba(255, 251, 235, 0.45)',
+    mountainFar: '#64748b',
+    mountainNear: '#475569',
+    wallColor: '#e7e5e4',
+    woodColor: '#5c3422',
+    roofBase: '#272a35',
+    roofLine: '#3f4454',
+    windowGlow: 'rgba(254, 243, 199, 0.4)',
+    roadBase: '#d6b88c',
+    roadLine: 'rgba(92, 52, 34, 0.14)',
+    lanternAlpha: 0.15
+  },
+  afternoon: {
+    skyTop: '#3b1d5e',
+    skyBottom: '#fb7185',
+    sunColor: '#fed7aa',
+    sunGlow: 'rgba(251, 146, 60, 0.45)',
+    mountainFar: '#311b47',
+    mountainNear: '#241434',
+    wallColor: '#c7b299',
+    woodColor: '#432316',
+    roofBase: '#1b1926',
+    roofLine: '#332d44',
+    windowGlow: 'rgba(253, 186, 116, 0.75)',
+    roadBase: '#9c7358',
+    roadLine: 'rgba(40, 20, 14, 0.2)',
+    lanternAlpha: 0.65
+  },
+  night: {
+    skyTop: '#070a14',
+    skyBottom: '#19213c',
+    sunColor: '#fde68a',
+    sunGlow: 'rgba(253, 230, 138, 0.16)',
+    mountainFar: '#11172a',
+    mountainNear: '#0c101d',
+    wallColor: '#25293a',
+    woodColor: '#3b2319',
+    roofBase: '#111420',
+    roofLine: '#232a40',
+    windowGlow: 'rgba(255, 198, 105, 0.88)',
+    roadBase: '#181a28',
+    roadLine: 'rgba(255, 255, 255, 0.05)',
+    lanternAlpha: 1.0
+  }
+};
+
+let currentTimeOfDay = 'day';
+let difficulty = 'easy';
+let gameStarted = false;
+
+// [패치 5] 5개의 독립된 위치 슬롯 배열 (원하는 위치 어디든 배치·이동 가능)
+let slots = [null, null, null, null, null];
+
+// 배치 및 이동 인터랙션 상태
+let pendingInst = null;       // 하단에서 선택되어 배치 대기 중인 악기
+let pendingEmptySlot = null;  // 빈 바닥 원을 먼저 클릭해 악기 선택을 기다리는 슬롯 번호
+let swapSourceIndex = null;   // 대열 내 [↔] 버튼을 눌러 이동/교체 대기 중인 슬롯 번호
+
+let heung = 0;
+let soloStreak = 0;
+let chuimsaeCooldown = 0;
+
+let finaleState = 'marching';
+let palaceGateX = 1350;
+let finaleStepsRemaining = 48;
+let gourdCrackProgress = 0;
+
+let stats = {
+  startTimeMs: 0,
+  elapsedSec: 0,
+  chuimsaeCount: 0,
+  swapAndChangeCount: 0
+};
+
+let scrollOffset = 0;
+let beatPulse = 0;
+let floatingTexts = [];
+let confetti = [];
+
+const SCALE = {
+  D3: 146.83, F3: 174.61, G3: 196.00, A3: 220.00, C4: 261.63,
+  D4: 293.66, F4: 349.23, G4: 392.00, A4: 440.00, C5: 523.25, D5: 587.33
+};
+
+function getPlacedMarchers() {
+  return slots.filter(m => m !== null);
+}
+
+// 시간대 무드 선정 (최초 타이틀 화면에서만 작동)
+function setTimeOfDay(timeKey) {
+  if (gameStarted) return;
+  currentTimeOfDay = timeKey;
+  document.querySelectorAll('.time-select-btn').forEach(btn => {
+    if (btn.dataset.time === timeKey) {
+      btn.classList.add('bg-amber-300', 'text-slate-950');
+      btn.classList.remove('text-slate-300');
+    } else {
+      btn.classList.remove('bg-amber-300', 'text-slate-950');
+      btn.classList.add('text-slate-300');
+    }
+  });
+}
+
+document.querySelectorAll('.time-select-btn').forEach(btn => {
+  btn.addEventListener('click', () => setTimeOfDay(btn.dataset.time));
+});
+setTimeOfDay('day');
+
+document.getElementById('openDiffBtn').addEventListener('click', () => {
+  document.getElementById('titleMainButtons').classList.add('hidden');
+  const box = document.getElementById('difficultyBox');
+  box.classList.remove('hidden');
+  box.classList.add('flex');
+});
+
+document.getElementById('cancelDiffBtn').addEventListener('click', () => {
+  document.getElementById('difficultyBox').classList.add('hidden');
+  document.getElementById('difficultyBox').classList.remove('flex');
+  document.getElementById('titleMainButtons').classList.remove('hidden');
+});
+
+document.getElementById('openHowToBtn').addEventListener('click', () => {
+  document.getElementById('howToModal').classList.remove('hidden');
+});
+document.getElementById('closeHowToBtn').addEventListener('click', () => {
+  document.getElementById('howToModal').classList.add('hidden');
+});
+document.getElementById('confirmHowToBtn').addEventListener('click', () => {
+  document.getElementById('howToModal').classList.add('hidden');
+});
+
+document.getElementById('startEasyBtn').addEventListener('click', () => startGame('easy'));
+document.getElementById('startHardBtn').addEventListener('click', () => startGame('hard'));
+
+document.getElementById('backToTitleBtn').addEventListener('click', () => {
+  gameStarted = false;
+  canvas.classList.add('blurred');
+  document.getElementById('titleOverlay').classList.remove('hidden-screen');
+  document.getElementById('difficultyBox').classList.add('hidden');
+  document.getElementById('difficultyBox').classList.remove('flex');
+  document.getElementById('titleMainButtons').classList.remove('hidden');
+});
+
+function clearInteractionStates() {
+  pendingInst = null;
+  pendingEmptySlot = null;
+  swapSourceIndex = null;
+}
+
+function startGame(selectedDiff) {
+  audio.init();
+  difficulty = selectedDiff;
+  gameStarted = true;
+
+  heung = 0;
+  finaleState = 'marching';
+  palaceGateX = 1350;
+  finaleStepsRemaining = 48;
+  gourdCrackProgress = 0;
+  confetti = [];
+  clearInteractionStates();
+
+  stats.startTimeMs = performance.now();
+  stats.elapsedSec = 0;
+  stats.chuimsaeCount = 0;
+  stats.swapAndChangeCount = 0;
+
+  const badge = document.getElementById('diffBadge');
+  if (difficulty === 'easy') {
+    badge.textContent = '쉬움';
+    badge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300';
+  } else {
+    badge.textContent = '어려움';
+    badge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300';
+  }
+
+  document.getElementById('finaleStepNotice').classList.add('hidden');
+  document.getElementById('endingModal').classList.add('hidden');
+  document.getElementById('titleOverlay').classList.add('hidden-screen');
+  canvas.classList.remove('blurred');
+
+  updateHeungDisplay();
+  updateNarrative(0, '종로 시전 행렬이 출정 준비를 마쳤소! 아래에서 악공을 택하거나 빈자리를 눌러 대열에 세우시오.');
+  renderDock();
+  renderUnderfootControls();
+}
+
+setInterval(() => {
+  if (!gameStarted || finaleState === 'ended') return;
+  if (getPlacedMarchers().length > 0) {
+    stats.elapsedSec++;
+    const mins = String(Math.floor(stats.elapsedSec / 60)).padStart(2, '0');
+    const secs = String(stats.elapsedSec % 60).padStart(2, '0');
+    document.getElementById('timerText').textContent = `${mins}:${secs}`;
+  }
+}, 1000);
+
+function getDiffMultiplier() {
+  return difficulty === 'easy' ? 1.0 : 0.58;
+}
+
+function updateHeungDisplay() {
+  document.getElementById('heungPercent').textContent = `${heung.toFixed(1)}%`;
+  document.getElementById('heungBar').style.width = `${Math.min(100, heung)}%`;
+}
+
+function updateNarrative(delta, reasonText) {
+  const box = document.getElementById('narrativeBox');
+  const tag = document.getElementById('narrativeTag');
+  const textEl = document.getElementById('narrativeText');
+
+  if (delta > 0) {
+    box.style.borderLeftColor = '#06d6a0';
+    tag.style.color = '#06d6a0';
+    tag.textContent = `[흥(興) 상승 ▲ +${delta.toFixed(2)}%]`;
+  } else if (delta < 0) {
+    box.style.borderLeftColor = '#ef476f';
+    tag.style.color = '#ef476f';
+    tag.textContent = `[흥(興) 주춤 ▼ ${delta.toFixed(2)}%]`;
+  } else {
+    box.style.borderLeftColor = '#ffd166';
+    tag.style.color = '#ffd166';
+    tag.textContent = `[거리 전갈 안내]`;
+  }
+  textEl.textContent = reasonText;
+}
+
+function addHeung(rawDelta, reasonText) {
+  if (!gameStarted) return;
+  if (finaleState !== 'marching') {
+    updateNarrative(0, reasonText);
+    return;
+  }
+
+  const mult = rawDelta > 0 ? getDiffMultiplier() : 1.0;
+  const finalDelta = rawDelta * mult;
+  heung = Math.max(0, Math.min(100, heung + finalDelta));
+
+  updateHeungDisplay();
+  updateNarrative(finalDelta, reasonText);
+
+  if (heung >= 100 && finaleState === 'marching') {
+    finaleState = 'approaching_gate';
+    palaceGateX = 1120;
+    updateNarrative(0, '거리의 흥이 마침내 정점에 달하였소! 저 멀리 왕궁 대문(광화문)이 위엄 있게 모습을 드러내오!');
+  }
+}
+
+// [패치 4 & 5] 다중 솔로 반영 및 조선시대풍 알림 문구 적용
+function evaluateMeasureHeung() {
+  const placed = getPlacedMarchers();
+  if (!gameStarted || finaleState !== 'marching' || placed.length === 0) return;
+
+  const activeMarchers = placed.filter(m => !m.muted);
+  const soloMarchers = placed.filter(m => m.solo && !m.muted);
+  const effective = soloMarchers.length > 0 ? soloMarchers : activeMarchers;
+
+  if (effective.length === 0) {
+    addHeung(-0.4, '모든 악공이 숨을 죽이자 행렬의 가락이 뚝 끊기며 구경꾼들이 아쉬워하오.');
+    return;
+  }
+
+  const ids = effective.map(m => m.inst.id);
+  const hasRhythm = effective.some(m => m.inst.category === 'rhythm');
+  const hasMelody = effective.some(m => m.inst.category === 'melody');
+
+  // 가장 오른쪽(선두 쪽)에 서 있는 연주자 찾기
+  let leader = null;
+  for (let i = 4; i >= 0; i--) {
+    if (slots[i] && !slots[i].muted) { leader = slots[i]; break; }
+  }
+  if (!leader) leader = effective[effective.length - 1];
+
+  if (soloMarchers.length > 0) {
+    soloStreak++;
+    if (soloStreak <= 3) {
+      if (soloMarchers.length === 1) {
+        const soloNarratives = {
+          buk: '북잡이가 신들린 듯 묵직한 북통을 난타하자 저자거리 백성들의 심장이 거세게 울리오!',
+          kkwaeng: '훤칠한 상쇠가 상모를 휘감으며 번개 같은 꽹과리 독주를 펼치자 골목마다 환호가 터지오!',
+          gayageum: '푸른 도포의 가야금 악사가 시크한 눈빛으로 깊은 농현을 들려주자 선비들이 숨죽여 감탄하오!',
+          haegeum: '해금 악사가 환히 웃으며 익살스러운 활질로 애절한 시김새를 뽑아내자 백성들이 미소 짓소!',
+          taepyeongso: '소년 태평소 악공이 초롱한 눈을 빛내며 절도 있게 고음을 뿜어내자 거리가 단숨에 들썩이오!',
+          joseon808: '조선 808 악공이 두루마기 소매를 날리며 묵직한 비트를 쪼개자 시전 거리가 춤판으로 변하오!'
         };
+        addHeung(0.88, soloNarratives[soloMarchers[0].inst.id]);
+      } else {
+        const names = soloMarchers.map(m => m.inst.shortName).join('·');
+        addHeung(0.95, `${names} 악공들이 나란히 독주(Solo) 호흡을 맞추자 구경꾼들이 열광하오!`);
+      }
+    } else {
+      addHeung(-0.35, `독주가 길어지자 구경꾼들이 모든 악공이 어우러지는 풍성한 합주를 기다리오.`);
+    }
+    return;
+  } else {
+    soloStreak = 0;
+  }
 
-        // 게임 상태 관리
-        const state = {
-            theme: 'day',          // 최초 타이틀에서만 변경 가능
-            difficulty: 'easy',
-            hype: 0,
-            seconds: 0,
-            timerId: null,
-            isGameOver: false,
+  if (effective.length === 1) {
+    const only = effective[0].inst;
+    addHeung(0.32, `${only.shortName} 악공이 홀로 가락을 짚으며 운치를 돋우오. 다른 악공을 더 세우면 흥이 더욱 크게 오를 것이오!`);
+    return;
+  }
 
-            // 5개의 행렬 위치 슬롯 (null 이면 빈 공간, 배치되면 { key, solo, mute } 객체 저장)
-            slots: [null, null, null, null, null],
+  if (!hasRhythm && hasMelody) {
+    addHeung(0.45, '아름다운 선율이 시전 거리에 울려 퍼지오. 북이나 꽹과리가 장단을 받쳐주면 금상첨화겠구려!');
+    return;
+  }
+  if (hasRhythm && !hasMelody) {
+    addHeung(0.50, '신명 나는 타악 장단이 행렬의 발걸음을 힘차게 이끄오! 선율 악공이 더해지면 더욱 풍성해질 것이오.');
+    return;
+  }
 
-            // 선택 및 배치/이동 인터랙션 상태
-            mode: null,            // 'ROSTER_SELECTED' | 'EMPTY_SLOT_SELECTED' | 'MOVE_FROM_SLOT'
-            selectedRosterKey: null,
-            selectedSlotIndex: null
-        };
+  let baseGain = 0.62 + (effective.length * 0.065);
+  if (audio.mode === 'jajinmori' && effective.length >= 3) {
+    baseGain += 0.08;
+  }
 
-        // 초기 커스텀 타이틀 로고 체크
-        window.addEventListener('DOMContentLoaded', () => {
-            if (typeof GAME_ASSETS !== 'undefined' && GAME_ASSETS.useCustomImages) {
-                document.getElementById('main-title-wrapper').innerHTML = 
-                    `<img src="${GAME_ASSETS.images.titleLogo}" class="title-logo-img" alt="조선힙스터 행렬악단">`;
-                document.getElementById('ingame-title-wrapper').innerHTML = 
-                    `<img src="${GAME_ASSETS.images.titleLogo}" class="ingame-title-img" alt="조선힙스터 행렬악단">`;
-            }
-        });
+  const lines = [];
+  if (ids.includes('buk') && ids.includes('taepyeongso')) {
+    lines.push('다부진 북잡이가 북소리를 깔고 소년 태평소가 기운차게 포효하자 한양 거리가 들썩이오!');
+  }
+  if (ids.includes('gayageum') && ids.includes('joseon808')) {
+    lines.push('시크한 가야금 선비의 농현과 조선 808의 묵직한 장단이 어우러져 기막힌 풍류가 완성되었소!');
+  }
+  if (ids.includes('haegeum') && ids.includes('kkwaeng')) {
+    lines.push('쾌활한 해금 악사의 큰 활질과 상쇠의 날렵한 상모 춤사위가 맞물려 백성들이 덩실덩실 어깨춤을 추오!');
+  }
 
-        // 조선시대풍 알림 문구 출력 함수
-        function setNotice(msg) {
-            document.getElementById('notice-banner').innerText = msg;
-        }
+  const leaderLines = {
+    buk: '선두에 선 거구의 북잡이가 붉은 띠를 휘날리며 묵직한 첫 박을 내리꽂아 행렬의 중심을 잡소!',
+    kkwaeng: '선두에 선 훤칠한 상쇠가 상모 물채로 허공에 원을 그리며 종로 시전 거리의 길을 화려하게 여오!',
+    gayageum: '선두의 가야금 악사가 침착한 손놀림으로 청아한 가락을 뜯어 거리 분위기를 매료시키오!',
+    haegeum: '선두에 나선 해금 악사가 환하게 웃으며 활대를 크게 놀리자 처마 밑 백성들이 손뼉으로 화답하오!',
+    taepyeongso: '선두의 소년 태평소 악공이 반듯하고 절도 있는 몸짓으로 왕궁을 향해 시원한 호른 소리를 쏘아 올리오!',
+    joseon808: '선두의 조선 808 악공이 힙한 장단으로 행렬을 지휘하자 기와집 골목마다 신명이 피어오르오!'
+  };
 
-        // 타이틀 화면 전용 시간대 선택 (인게임 진입 후에는 변경 불가)
-        function selectInitialTheme(themeKey, btnEl) {
-            state.theme = themeKey;
-            document.getElementById('theme-btn-group').querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
-            btnEl.classList.add('active');
-            applyThemeStyles();
-        }
+  lines.push(leaderLines[leader.inst.id]);
+  const pickedLine = lines[Math.floor(Math.random() * lines.length)];
+  addHeung(baseGain, pickedLine);
+}
 
-        function applyThemeStyles() {
-            const titleScreen = document.getElementById('title-screen');
-            const viewport = document.getElementById('procession-viewport');
-            const road = document.getElementById('road-floor');
-            const scenery = document.getElementById('scenery-text');
+function getSlotScreenPos(slotIdx) {
+  const startX = 185;
+  const gapX = 152;
+  return {
+    x: startX + slotIdx * gapX,
+    y: 342
+  };
+}
 
-            if (state.theme === 'day') {
-                titleScreen.style.background = 'var(--bg-day-sky)';
-                viewport.style.background = 'var(--bg-day-sky)';
-                road.style.backgroundColor = 'var(--road-day)';
-                scenery.innerText = '☀️ 오시(낮) — 종로 시전 행랑 거리 행진 중';
-            } else if (state.theme === 'afternoon') {
-                titleScreen.style.background = 'var(--bg-afternoon-sky)';
-                viewport.style.background = 'var(--bg-afternoon-sky)';
-                road.style.backgroundColor = 'var(--road-afternoon)';
-                scenery.innerText = '🌅 신시(오후) — 노을 진 운종가 대로 행진 중';
-            } else if (state.theme === 'night') {
-                titleScreen.style.background = 'var(--bg-night-sky)';
-                viewport.style.background = 'var(--bg-night-sky)';
-                road.style.backgroundColor = 'var(--road-night)';
-                scenery.innerText = '🌙 자시(밤) — 청사초롱 밝힌 밤거리 행진 중';
-            }
-        }
+// =========================================================================
+// [패치 5] 선택·배치·이동·교체 및 다중 솔로 컨트롤 렌더링
+// =========================================================================
+function renderUnderfootControls() {
+  const layer = document.getElementById('underfootLayer');
+  layer.innerHTML = '';
 
-        function selectDifficulty(diffKey, btnEl) {
-            state.difficulty = diffKey;
-            document.getElementById('diff-btn-group').querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
-            btnEl.classList.add('active');
-        }
+  const swapBadge = document.getElementById('swapStatusBadge');
+  if (swapSourceIndex !== null || pendingInst !== null || pendingEmptySlot !== null) {
+    swapBadge.classList.remove('hidden');
+  } else {
+    swapBadge.classList.add('hidden');
+  }
 
-        function openHowTo() {
-            document.getElementById('howto-screen').classList.remove('hidden');
-        }
+  for (let idx = 0; idx < 5; idx++) {
+    const marcher = slots[idx];
+    const pos = getSlotScreenPos(idx);
+    const leftPct = (pos.x / canvas.width) * 100;
+    const topPct = ((pos.y + 42) / canvas.height) * 100;
 
-        function closeHowTo() {
-            document.getElementById('howto-screen').classList.add('hidden');
-        }
+    // 1) 빈 공간(바닥 원)인 경우: 클릭 시 악기 배치 또는 빈 공간 먼저 선택
+    if (!marcher) {
+      const hitArea = document.createElement('div');
+      hitArea.className = 'empty-slot-hit';
+      hitArea.style.left = `${leftPct}%`;
+      hitArea.style.top = `${((pos.y + 12) / canvas.height) * 100}%`;
+      hitArea.title = '빈자리 선택';
+      hitArea.addEventListener('click', (e) => {
+        e.stopPropagation();
+        onEmptySlotClicked(idx);
+      });
+      layer.appendChild(hitArea);
+      continue;
+    }
 
-        // 게임 시작
-        function startGame() {
-            applyThemeStyles();
-            document.getElementById('title-screen').classList.add('hidden');
-            document.getElementById('ending-screen').classList.add('hidden');
-            document.getElementById('play-screen').classList.remove('hidden');
+    // 2) 연주자가 배치된 슬롯인 경우: S / M / ↔ 버튼 렌더링
+    const wrap = document.createElement('div');
+    const isSwapping = swapSourceIndex === idx;
+    const isTargetOfSwap = swapSourceIndex !== null && swapSourceIndex !== idx;
+    const hasActiveState = marcher.solo || marcher.muted || isSwapping;
 
-            state.hype = 0;
-            state.seconds = 0;
-            state.isGameOver = false;
-            state.slots = [null, null, null, null, null];
-            clearSelectionMode();
+    wrap.className = `slot-controls ${hasActiveState ? 'has-active' : ''} ${isTargetOfSwap ? 'target-blink' : ''}`;
+    wrap.style.left = `${leftPct}%`;
+    wrap.style.top = `${topPct}%`;
 
-            setNotice("출정 준비가 끝났소! 악공이나 빈자리를 택해 대열을 갖추시오.");
-            updateHUD();
-            renderAll();
+    // [S] 다중 솔로 버튼 (DAW 방식: 다른 악기의 솔로를 해제하지 않고 함께 켜짐)
+    const sBtn = document.createElement('button');
+    sBtn.className = `foot-btn ${marcher.solo ? 'active-solo' : ''}`;
+    sBtn.title = `${marcher.inst.shortName} 독주(Solo)`;
+    sBtn.textContent = 'S';
+    sBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      audio.init();
+      marcher.solo = !marcher.solo;
+      if (marcher.solo) {
+        marcher.muted = false;
+        soloStreak = 0;
+        addHeung(0.35, `${marcher.inst.shortName} 악공이 독주(Solo)에 나섰소! 다른 악공의 S를 눌러 함께 독주할 수도 있소.`);
+      } else {
+        updateNarrative(0, `${marcher.inst.shortName} 악공의 독주를 풀었소.`);
+      }
+      renderUnderfootControls();
+    });
 
-            // 사운드 루프 시작
-            soundEngine.startLoop(() => getAudibleInstrumentKeys());
+    // [M] 뮤트 버튼
+    const mBtn = document.createElement('button');
+    mBtn.className = `foot-btn ${marcher.muted ? 'active-mute' : ''}`;
+    mBtn.title = `${marcher.inst.shortName} 음소거(Mute)`;
+    mBtn.textContent = 'M';
+    mBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      audio.init();
+      marcher.muted = !marcher.muted;
+      if (marcher.muted) marcher.solo = false;
+      updateNarrative(0, marcher.muted
+        ? `${marcher.inst.shortName} 악공이 잠시 소리를 비워두오.`
+        : `${marcher.inst.shortName} 악공이 다시 힘차게 가락을 보태오!`);
+      renderUnderfootControls();
+    });
 
-            if (state.timerId) clearInterval(state.timerId);
-            state.timerId = setInterval(() => {
-                if (state.isGameOver) return;
-                state.seconds++;
+    // [↔] 위치 이동 및 맞교환 버튼
+    const swapBtn = document.createElement('button');
+    swapBtn.className = `foot-btn ${isSwapping ? 'active-swap' : ''}`;
+    swapBtn.title = `위치 변경`;
+    swapBtn.textContent = '↔';
+    swapBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      audio.init();
+      pendingInst = null;
+      pendingEmptySlot = null;
 
-                // 현재 소리가 나는 악기 수에 비례하여 흥 상승
-                const audibleKeys = getAudibleInstrumentKeys();
-                if (audibleKeys.length > 0) {
-                    const baseRate = state.difficulty === 'easy' ? 0.85 : 0.45;
-                    const gain = baseRate * (audibleKeys.length / 5);
-                    state.hype = Math.min(100, state.hype + gain);
+      if (swapSourceIndex === null) {
+        swapSourceIndex = idx;
+        updateNarrative(0, `${marcher.inst.shortName} 악공을 택하였소. 옮겨갈 반짝이는 빈자리나 맞바꿀 악공의 ↔를 누르시오.`);
+      } else if (swapSourceIndex === idx) {
+        swapSourceIndex = null;
+        updateNarrative(0, `${marcher.inst.shortName} 악공의 자리 이동을 거두었소.`);
+      } else {
+        const firstIdx = swapSourceIndex;
+        const secondIdx = idx;
+        const firstName = slots[firstIdx].inst.shortName;
+        const secondName = slots[secondIdx].inst.shortName;
 
-                    if (state.hype >= 80 && state.hype - gain < 80) {
-                        setNotice("광화문 대문이 코앞이오! 흥이 절정에 달하고 있소!");
-                    } else if (state.hype >= 50 && state.hype - gain < 50) {
-                        setNotice("저자거리 백성들이 어깨춤을 추기 시작했소!");
-                    }
-                }
+        const temp = slots[firstIdx];
+        slots[firstIdx] = slots[secondIdx];
+        slots[secondIdx] = temp;
 
-                updateHUD();
-                if (state.hype >= 100) {
-                    finishGame();
-                }
-            }, 1000);
-        }
+        swapSourceIndex = null;
+        stats.swapAndChangeCount++;
+        addHeung(0.42, `${firstName} 악공과 ${secondName} 악공이 대열 위치를 맞바꾸자 구경꾼들이 환호하오!`);
+      }
+      renderDock();
+      renderUnderfootControls();
+    });
 
-        function returnToTitle() {
-            if (state.timerId) clearInterval(state.timerId);
-            soundEngine.stopLoop();
-            document.getElementById('play-screen').classList.add('hidden');
-            document.getElementById('ending-screen').classList.add('hidden');
-            document.getElementById('title-screen').classList.remove('hidden');
-        }
+    wrap.appendChild(sBtn);
+    wrap.appendChild(mBtn);
+    wrap.appendChild(swapBtn);
+    layer.appendChild(wrap);
+  }
+}
 
-        // 현재 실제로 소리가 나는 악기 목록 계산 (DAW 방식 다중 솔로 반영)
-        function getAudibleInstrumentKeys() {
-            const placedSlots = state.slots.filter(s => s !== null);
-            if (placedSlots.length === 0) return [];
+// 빈 공간(바닥 원)을 클릭했을 때의 동작
+function onEmptySlotClicked(slotIdx) {
+  audio.init();
 
-            // 솔로(S)가 켜진 악기가 하나라도 있으면, 솔로가 켜진 모든 악기들이 함께 소리 남 (뮤트 제외)
-            const anySolo = placedSlots.some(s => s.solo);
-            if (anySolo) {
-                return placedSlots.filter(s => s.solo && !s.mute).map(s => s.key);
-            }
-            // 솔로가 없으면 뮤트(M)되지 않은 모든 배치 악기가 소리 남
-            return placedSlots.filter(s => !s.mute).map(s => s.key);
-        }
+  // 1) 하단에서 연주자를 먼저 선택한 상태라면 -> 이 빈 공간에 즉시 배치!
+  if (pendingInst !== null) {
+    placeInstrumentAtSlot(pendingInst, slotIdx);
+    return;
+  }
 
-        function isSlotAudible(slotObj) {
-            if (!slotObj || slotObj.mute) return false;
-            const anySolo = state.slots.some(s => s !== null && s.solo);
-            if (anySolo) return slotObj.solo;
-            return true;
-        }
+  // 2) 대열의 다른 연주자 [↔] 이동 버튼을 누른 상태라면 -> 그 연주자를 이 빈 공간으로 이동!
+  if (swapSourceIndex !== null) {
+    const fromIdx = swapSourceIndex;
+    const movingMarcher = slots[fromIdx];
+    slots[slotIdx] = movingMarcher;
+    slots[fromIdx] = null;
+    swapSourceIndex = null;
+    stats.swapAndChangeCount++;
+    addHeung(0.35, `${movingMarcher.inst.shortName} 악공이 새로운 자리로 날렵하게 이동하였소!`);
+    renderDock();
+    renderUnderfootControls();
+    return;
+  }
 
-        function clearSelectionMode() {
-            state.mode = null;
-            state.selectedRosterKey = null;
-            state.selectedSlotIndex = null;
-        }
+  // 3) 아무것도 선택되지 않은 상태에서 빈 공간을 먼저 누른 경우 -> 추가 가능한 악기 버튼들이 깜빡임!
+  if (pendingEmptySlot === slotIdx) {
+    pendingEmptySlot = null;
+    updateNarrative(0, '빈자리 선택을 거두었소.');
+  } else {
+    pendingEmptySlot = slotIdx;
+    pendingInst = null;
+    swapSourceIndex = null;
+    updateNarrative(0, '이 자리에 세울 악공을 아래 반짝이는 패에서 택하시오.');
+  }
+  renderDock();
+  renderUnderfootControls();
+}
 
-        // ====================================================
-        // [패치 5] 선택, 배치, 이동, 맞교환 매커니즘 구현
-        // ====================================================
+// 특정 슬롯에 악기 배치 실행
+function placeInstrumentAtSlot(inst, slotIdx) {
+  slots[slotIdx] = {
+    inst,
+    muted: false,
+    solo: false,
+    motionScale: 0
+  };
+  clearInteractionStates();
+  stats.swapAndChangeCount++;
+  addHeung(0.25, `${inst.shortName} 악공이 행렬 자리에 당당히 합류하였소!`);
 
-        // 1) 하단 연주자 버튼 클릭 시
-        function onRosterClick(instKey) {
-            const existingSlotIdx = state.slots.findIndex(s => s && s.key === instKey);
+  if (getPlacedMarchers().length > 0 && !audio.isPlaying) {
+    startSequencer();
+  }
+  renderDock();
+  renderUnderfootControls();
+}
 
-            // 빈 공간(슬롯)을 먼저 클릭해 둔 상태에서, 아직 배치 안 된 연주자 버튼을 누른 경우 -> 즉시 해당 위치에 배치!
-            if (state.mode === 'EMPTY_SLOT_SELECTED' && existingSlotIdx === -1) {
-                const targetSlot = state.selectedSlotIndex;
-                state.slots[targetSlot] = { key: instKey, solo: false, mute: false };
-                clearSelectionMode();
-                setNotice(`${MASTER_INSTRUMENTS[instKey].label} 악공이 대열에 합류하였소! 흥이 오르오!`);
-                renderAll();
-                return;
-            }
+// [패치 1 & 5] 하단 연주자 버튼 렌더링 (이모지, 북(Buk), "둥-! 더러러" 만 남기고 깜빡임 연동)
+function renderDock() {
+  const grid = document.getElementById('instrumentGrid');
+  grid.innerHTML = '';
 
-            // 이미 배치된 연주자 버튼을 누른 경우 -> 대열에서 제외(퇴장)시킬지, 선택 취소할지 처리
-            if (existingSlotIdx !== -1) {
-                state.slots[existingSlotIdx] = null;
-                clearSelectionMode();
-                setNotice(`${MASTER_INSTRUMENTS[instKey].label} 악공이 대열에서 물러났소.`);
-                renderAll();
-                return;
-            }
+  INSTRUMENTS.forEach(inst => {
+    const inParade = slots.some(m => m && m.inst.id === inst.id);
+    const isPendingThis = pendingInst && pendingInst.id === inst.id;
+    const isBlinkForEmptySlot = (pendingEmptySlot !== null && !inParade);
 
-            // 같은 연주자 버튼을 다시 누르면 선택 취소
-            if (state.mode === 'ROSTER_SELECTED' && state.selectedRosterKey === instKey) {
-                clearSelectionMode();
-                setNotice("악공 선택을 거두었소.");
-                renderAll();
-                return;
-            }
+    const card = document.createElement('div');
+    card.className = `inst-card ${inParade ? 'active' : ''} ${(isPendingThis || isBlinkForEmptySlot) ? 'blink-card' : ''}`;
+    card.innerHTML = `
+      <div class="text-lg sm:text-2xl leading-none mb-0.5">${inst.icon}</div>
+      <div class="text-[11px] sm:text-xs font-semibold text-white leading-tight">${inst.name}</div>
+      <div class="text-[10px] text-amber-300 mt-0.5"><em>"${inst.gueum[0]} ${inst.gueum[1]}"</em></div>
+    `;
+    card.addEventListener('click', () => onInstrumentCardClicked(inst));
+    grid.appendChild(card);
+  });
+}
 
-            // 아직 배치되지 않은 연주자를 새로 선택한 경우 -> 버튼과 빈 바닥 원들이 깜빡임
-            state.mode = 'ROSTER_SELECTED';
-            state.selectedRosterKey = instKey;
-            state.selectedSlotIndex = null;
-            setNotice("반짝이는 빈자리를 눌러 악공을 세우시오.");
-            renderAll();
-        }
+function onInstrumentCardClicked(inst) {
+  audio.init();
+  const existingIdx = slots.findIndex(m => m && m.inst.id === inst.id);
 
-        // 2) 행렬의 빈 공간(바닥 원) 또는 캐릭터 슬롯 클릭 시
-        function onSlotClick(slotIdx) {
-            const targetSlot = state.slots[slotIdx];
+  // 이미 대열에 서 있는 악기를 누르면 대열에서 물러남
+  if (existingIdx !== -1) {
+    slots[existingIdx] = null;
+    clearInteractionStates();
+    stats.swapAndChangeCount++;
+    updateNarrative(0, `${inst.shortName} 악공이 대열에서 물러났소.`);
+    if (getPlacedMarchers().length === 0) stopSequencer();
+    renderDock();
+    renderUnderfootControls();
+    return;
+  }
 
-            // [케이스 A] 하단에서 연주자를 먼저 선택한 상태 -> 클릭한 빈 공간에 배치
-            if (state.mode === 'ROSTER_SELECTED') {
-                if (targetSlot === null) {
-                    const instKey = state.selectedRosterKey;
-                    state.slots[slotIdx] = { key: instKey, solo: false, mute: false };
-                    clearSelectionMode();
-                    setNotice(`${MASTER_INSTRUMENTS[instKey].label} 악공이 자리에 섰소! 풍악을 울리시오!`);
-                    renderAll();
-                }
-                return;
-            }
+  // 빈 공간(바닥 원)을 먼저 클릭해 둔 상태라면 -> 그 빈 공간에 즉시 배치!
+  if (pendingEmptySlot !== null) {
+    placeInstrumentAtSlot(inst, pendingEmptySlot);
+    return;
+  }
 
-            // [케이스 B] 대열 위의 연주자 이동(↔) 버튼을 누른 상태 -> 빈 공간으로 이동하거나 다른 연주자와 교체
-            if (state.mode === 'MOVE_FROM_SLOT') {
-                const fromIdx = state.selectedSlotIndex;
-                if (fromIdx === slotIdx) {
-                    clearSelectionMode();
-                    setNotice("자리 이동을 취소하였소.");
-                } else {
-                    const temp = state.slots[fromIdx];
-                    state.slots[fromIdx] = state.slots[slotIdx];
-                    state.slots[slotIdx] = temp;
-                    clearSelectionMode();
-                    setNotice(targetSlot === null ? "악공이 빈자리로 자리를 옮겼소." : "두 악공이 서로 자리를 맞바꾸었소!");
-                }
-                renderAll();
-                return;
-            }
+  // 이미 선택한 악기 카드를 다시 누르면 선택 취소
+  if (pendingInst && pendingInst.id === inst.id) {
+    pendingInst = null;
+    updateNarrative(0, '악공 선택을 거두었소.');
+    renderDock();
+    renderUnderfootControls();
+    return;
+  }
 
-            // [케이스 C] 아무것도 선택 안 된 상태에서 빈 공간(바닥 원)을 먼저 클릭한 경우 -> 대기 중인 연주자 버튼들이 깜빡임
-            if (targetSlot === null) {
-                if (state.mode === 'EMPTY_SLOT_SELECTED' && state.selectedSlotIndex === slotIdx) {
-                    clearSelectionMode();
-                    setNotice("자리 선택을 거두었소.");
-                } else {
-                    const unplacedCount = Object.keys(MASTER_INSTRUMENTS).filter(
-                        k => !state.slots.some(s => s && s.key === k)
-                    ).length;
+  // 빈자리가 하나도 없는 경우
+  if (getPlacedMarchers().length >= 5) {
+    updateNarrative(0, '행렬 대열 다섯 자리가 모두 찼소. 먼저 다른 악공을 물리시오.');
+    return;
+  }
 
-                    if (unplacedCount === 0) {
-                        setNotice("모든 악공이 이미 행렬에 올라 있소!");
-                        return;
-                    }
-                    state.mode = 'EMPTY_SLOT_SELECTED';
-                    state.selectedSlotIndex = slotIdx;
-                    state.selectedRosterKey = null;
-                    setNotice("이 자리에 세울 악공을 아래에서 택하시오.");
-                }
-                renderAll();
-            }
-        }
+  // 악기 카드를 새로 선택한 경우 -> 카드와 빈 바닥 원들이 함께 깜빡임!
+  pendingInst = inst;
+  pendingEmptySlot = null;
+  swapSourceIndex = null;
+  updateNarrative(0, `${inst.shortName} 악공을 택하였소. 행렬에서 반짝이는 빈자리를 눌러 세우시오.`);
+  renderDock();
+  renderUnderfootControls();
+}
 
-        // 3) 발 아래 [S] 솔로 버튼 (DAW 방식 다중 솔로 가능)
-        function toggleSolo(slotIdx, event) {
-            event.stopPropagation();
-            const slotObj = state.slots[slotIdx];
-            if (!slotObj) return;
+// 캔버스 자체를 클릭했을 때도 빈 공간/캐릭터 클릭이 자연스럽게 인식되도록 지원
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const cx = (e.clientX - rect.left) * scaleX;
+  const cy = (e.clientY - rect.top) * scaleY;
 
-            slotObj.solo = !slotObj.solo;
-            if (slotObj.solo) {
-                slotObj.mute = false;
-                setNotice(`${MASTER_INSTRUMENTS[slotObj.key].label} 독주(Solo)를 더하였소! 다른 악공도 함께 독주할 수 있소.`);
-            } else {
-                setNotice(`${MASTER_INSTRUMENTS[slotObj.key].label} 독주를 풀었소.`);
-            }
-            renderAll();
-        }
+  for (let i = 0; i < 5; i++) {
+    const pos = getSlotScreenPos(i);
+    if (Math.abs(cx - pos.x) < 62 && cy > pos.y - 135 && cy < pos.y + 45) {
+      if (slots[i] === null) {
+        onEmptySlotClicked(i);
+      } else if (swapSourceIndex !== null && swapSourceIndex !== i) {
+        const firstIdx = swapSourceIndex;
+        const firstName = slots[firstIdx].inst.shortName;
+        const secondName = slots[i].inst.shortName;
+        const temp = slots[firstIdx];
+        slots[firstIdx] = slots[i];
+        slots[i] = temp;
+        swapSourceIndex = null;
+        stats.swapAndChangeCount++;
+        addHeung(0.42, `${firstName} 악공과 ${secondName} 악공이 대열 위치를 맞바꾸자 구경꾼들이 환호하오!`);
+        renderDock();
+        renderUnderfootControls();
+      }
+      break;
+    }
+  }
+});
 
-        // 4) 발 아래 [M] 뮤트 버튼
-        function toggleMute(slotIdx, event) {
-            event.stopPropagation();
-            const slotObj = state.slots[slotIdx];
-            if (!slotObj) return;
+function startSequencer() {
+  audio.isPlaying = true;
+  if (audio.timer) clearInterval(audio.timer);
+  audio.timer = setInterval(runStep, audio.stepInterval);
+}
 
-            slotObj.mute = !slotObj.mute;
-            if (slotObj.mute) {
-                slotObj.solo = false;
-                setNotice(`${MASTER_INSTRUMENTS[slotObj.key].label} 소리를 잠시 멈추었소.`);
-            } else {
-                setNotice(`${MASTER_INSTRUMENTS[slotObj.key].label} 연주를 다시 시작하오!`);
-            }
-            renderAll();
-        }
+function stopSequencer() {
+  audio.isPlaying = false;
+  if (audio.timer) clearInterval(audio.timer);
+  audio.timer = null;
+}
 
-        // 5) 발 아래 [↔] 이동 버튼
-        function startMoveFromSlot(slotIdx, event) {
-            event.stopPropagation();
-            if (state.mode === 'MOVE_FROM_SLOT' && state.selectedSlotIndex === slotIdx) {
-                clearSelectionMode();
-                setNotice("자리 이동을 취소하였소.");
-            } else {
-                state.mode = 'MOVE_FROM_SLOT';
-                state.selectedSlotIndex = slotIdx;
-                state.selectedRosterKey = null;
-                setNotice("옮겨갈 빈자리나 맞바꿀 악공을 택하시오.");
-            }
-            renderAll();
-        }
+function runStep() {
+  const s = audio.step % 12;
+  const hasSolo = slots.some(m => m && m.solo && !m.muted);
 
-        // 장단 변경, 얼씨구 추임새, 초기화
-        function toggleRhythmTempo() {
-            const btn = document.getElementById('rhythm-btn');
-            if (soundEngine.bpm === 120) {
-                soundEngine.bpm = 95;
-                btn.innerText = "장단: 굿거리";
-                setNotice("느긋하고 멋스러운 굿거리장단으로 바꾸었소!");
-            } else if (soundEngine.bpm === 95) {
-                soundEngine.bpm = 145;
-                btn.innerText = "장단: 휘모리";
-                setNotice("몰아치는 휘모리장단으로 박자를 높였소!");
-            } else {
-                soundEngine.bpm = 120;
-                btn.innerText = "장단: 자진모리";
-                setNotice("신명 나는 자진모리장단으로 맞추었소!");
-            }
-            soundEngine.startLoop(() => getAudibleInstrumentKeys());
-        }
+  if (s % 3 === 0) beatPulse = 1.0;
+  if (audio.hypeTicks > 0) audio.hypeTicks--;
+  if (chuimsaeCooldown > 0) chuimsaeCooldown--;
 
-        function triggerChant() {
-            soundEngine.playChant();
-            const audible = getAudibleInstrumentKeys();
-            if (audible.length === 0) {
-                setNotice("먼저 악공을 대열에 세워 풍악을 울리시오!");
-                return;
-            }
-            const bonus = state.difficulty === 'easy' ? 4 : 2;
-            state.hype = Math.min(100, state.hype + bonus);
-            setNotice("얼씨구 좋다! 추임새에 힘입어 행렬의 흥이 크게 올랐소!");
-            updateHUD();
-            if (state.hype >= 100) finishGame();
-        }
+  if (finaleState === 'performing_4bars') {
+    finaleStepsRemaining--;
+    const currentBar = 4 - Math.floor(finaleStepsRemaining / 12);
+    const notice = document.getElementById('finaleStepNotice');
+    notice.classList.remove('hidden');
+    notice.textContent = `🏯 왕궁 대문 앞 피날레 연주 중 (${Math.min(4, currentBar)} / 4 마디)`;
 
-        function resetFormation() {
-            state.slots = [null, null, null, null, null];
-            clearSelectionMode();
-            setNotice("대열을 모두 비웠소. 처음부터 다시 진영을 짜보시오.");
-            renderAll();
-        }
+    if (finaleStepsRemaining <= 0) {
+      triggerGourdBurstAndEnding();
+    }
+  } else if (s === 11 && finaleState === 'marching') {
+    evaluateMeasureHeung();
+  }
 
-        // 화면 렌더링 (행렬 스테이지 + 하단 연주자 버튼)
-        function renderAll() {
-            renderStage();
-            renderRoster();
-        }
+  slots.forEach((marcher, idx) => {
+    if (!marcher || marcher.muted || (hasSolo && !marcher.solo)) return;
 
-        function renderStage() {
-            const stageEl = document.getElementById('band-stage');
-            stageEl.innerHTML = '';
+    const dest = audio.createChannel(idx);
+    const id = marcher.inst.id;
+    let triggered = false;
 
-            state.slots.forEach((slotObj, idx) => {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'slot-wrapper';
+    if (id === 'buk') {
+      if (s === 0) { audio.playBuk(dest, true); triggered = true; }
+      else if (s === 6 || s === 9) { audio.playBuk(dest, false); triggered = true; }
+      else if (audio.mode === 'jajinmori' && s === 11) { audio.playBuk(dest, false); triggered = true; }
+    }
 
-                if (slotObj === null) {
-                    // 빈 공간 (바닥 원만 표시, 대열1~5 자막 제거)
-                    const isBlinking = (state.mode === 'ROSTER_SELECTED') || 
-                                       (state.mode === 'EMPTY_SLOT_SELECTED' && state.selectedSlotIndex === idx) ||
-                                       (state.mode === 'MOVE_FROM_SLOT');
-                    const circle = document.createElement('div');
-                    circle.className = `floor-circle ${isBlinking ? 'blink-slot' : ''}`;
-                    circle.onclick = () => onSlotClick(idx);
-                    wrapper.appendChild(circle);
-                } else {
-                    // 배치된 캐릭터 렌더링
-                    const info = MASTER_INSTRUMENTS[slotObj.key];
-                    const audible = isSlotAudible(slotObj);
-                    const isMoveTarget = (state.mode === 'MOVE_FROM_SLOT' && state.selectedSlotIndex !== idx);
-                    const isMovingSelf = (state.mode === 'MOVE_FROM_SLOT' && state.selectedSlotIndex === idx);
+    if (id === 'kkwaeng') {
+      if (s === 0 || s === 6) { audio.playKkwaeng(dest, true); triggered = true; }
+      else if (s === 2 || s === 5 || s === 8 || s === 11) { audio.playKkwaeng(dest, false); triggered = true; }
+    }
 
-                    const unit = document.createElement('div');
-                    unit.className = `character-unit ${audible ? 'playing-bounce' : ''} ${info.cssType} ${isMoveTarget ? 'blink-target' : ''}`;
+    if (id === 'gayageum') {
+      const notes = [
+        { step: 0, f: SCALE.D4, nh: false },
+        { step: 2, f: SCALE.F4, nh: false },
+        { step: 3, f: SCALE.G4, nh: true },
+        { step: 6, f: SCALE.A4, nh: false },
+        { step: 8, f: SCALE.G4, nh: false },
+        { step: 9, f: SCALE.F4, nh: true }
+      ];
+      const hit = notes.find(n => n.step === s);
+      if (hit) {
+        audio.playGayageum(dest, hit.f, hit.nh);
+        triggered = true;
+      }
+    }
 
-                    // 커스텀 이미지 사용 여부 체크
-                    let visualInner = '';
-                    if (typeof GAME_ASSETS !== 'undefined' && GAME_ASSETS.useCustomImages) {
-                        visualInner = `<img src="${GAME_ASSETS.images[slotObj.key]}" class="char-custom-img" alt="${info.label}">`;
-                    } else {
-                        visualInner = `
-                            <div class="avatar-head">${info.emoji}</div>
-                            <div class="avatar-body"></div>
-                        `;
-                    }
+    if (id === 'haegeum') {
+      if (s === 0) { audio.playHaegeum(dest, SCALE.A4, SCALE.C5, 0.42); triggered = true; }
+      else if (s === 4) { audio.playHaegeum(dest, SCALE.A4, SCALE.G4, 0.28); triggered = true; }
+      else if (s === 6) { audio.playHaegeum(dest, SCALE.F4, SCALE.G4, 0.42); triggered = true; }
+      else if (s === 10) { audio.playHaegeum(dest, SCALE.F4, SCALE.D4, 0.28); triggered = true; }
+    }
 
-                    unit.innerHTML = `
-                        <div class="char-visual" onclick="onSlotClick(${idx})">
-                            ${visualInner}
-                        </div>
-                        <div class="underfoot-controls">
-                            <button class="uf-btn ${slotObj.solo ? 'active-solo' : ''}" onclick="toggleSolo(${idx}, event)">S</button>
-                            <button class="uf-btn ${slotObj.mute ? 'active-mute' : ''}" onclick="toggleMute(${idx}, event)">M</button>
-                            <button class="uf-btn ${isMovingSelf ? 'active-move' : ''}" onclick="startMoveFromSlot(${idx}, event)">↔</button>
-                        </div>
-                    `;
-                    wrapper.appendChild(unit);
-                }
+    if (id === 'taepyeongso') {
+      if (s === 0) { audio.playTaepyeongso(dest, SCALE.D5, 0.3); triggered = true; }
+      else if (s === 3) { audio.playTaepyeongso(dest, SCALE.C5, 0.22); triggered = true; }
+      else if (s === 5) { audio.playTaepyeongso(dest, SCALE.A4, 0.22); triggered = true; }
+      else if (s === 9) { audio.playTaepyeongso(dest, SCALE.G4, 0.35); triggered = true; }
+    }
 
-                stageEl.appendChild(wrapper);
-            });
-        }
+    if (id === 'joseon808') {
+      if (s === 0 || s === 7) { audio.play808(dest, 'kick'); triggered = true; }
+      else if (s === 3 || s === 9) { audio.play808(dest, 'snare'); triggered = true; }
+      else { audio.play808(dest, 'hat'); }
+    }
 
-        function renderRoster() {
-            const gridEl = document.getElementById('roster-grid');
-            gridEl.innerHTML = '';
+    if (triggered) {
+      marcher.motionScale = 1.0;
+      const gList = marcher.inst.gueum;
+      const word = gList[Math.floor(Math.random() * gList.length)];
+      const pos = getSlotScreenPos(idx);
+      floatingTexts.push({
+        x: pos.x + (Math.random() * 22 - 11),
+        y: pos.y - 118,
+        text: word,
+        color: marcher.inst.color,
+        alpha: 1.0,
+        vy: -1.25
+      });
+    }
+  });
 
-            Object.values(MASTER_INSTRUMENTS).forEach(inst => {
-                const isPlaced = state.slots.some(s => s && s.key === inst.key);
-                const isBlinking = (state.mode === 'ROSTER_SELECTED' && state.selectedRosterKey === inst.key) ||
-                                   (state.mode === 'EMPTY_SLOT_SELECTED' && !isPlaced);
+  audio.step++;
+}
 
-                const btn = document.createElement('button');
-                btn.className = `roster-btn ${isPlaced ? 'placed' : ''} ${isBlinking ? 'blink-roster' : ''}`;
-                btn.onclick = () => onRosterClick(inst.key);
+function triggerGourdBurstAndEnding() {
+  finaleState = 'gourd_burst';
+  audio.playGourdBurstFanfare();
+  updateNarrative(0, '🎊 왕궁 대문 위 대형 복박이 시원하게 갈라지며 오색 꽃가루와 경축 현수막이 쏟아지오!');
 
-                // 요청사항: 이모지, 북(buk), "둥-! 더러러" 만 깔끔하게 표시
-                btn.innerHTML = `
-                    <span class="r-emoji">${inst.emoji}</span>
-                    <span class="r-name">${inst.label}</span>
-                    <span class="r-sound">${inst.soundText}</span>
-                `;
+  for (let i = 0; i < 130; i++) {
+    confetti.push({
+      x: palaceGateX - 40 + (Math.random() * 140 - 70),
+      y: 110 + (Math.random() * 40 - 20),
+      size: 6 + Math.random() * 7,
+      color: ['#ffd166', '#ef476f', '#06d6a0', '#38bdf8', '#c084fc', '#ffffff'][Math.floor(Math.random() * 6)],
+      vy: 1.2 + Math.random() * 3.2,
+      vx: -3.5 + Math.random() * 7
+    });
+  }
 
-                gridEl.appendChild(btn);
-            });
-        }
+  setTimeout(() => {
+    finaleState = 'ended';
+    showBranchingEndingModal();
+  }, 2600);
+}
 
-        function updateHUD() {
-            const pct = Math.floor(state.hype);
-            document.getElementById('hype-fill').style.width = `${pct}%`;
-            document.getElementById('hype-text').innerText = `${pct}%`;
+function showBranchingEndingModal() {
+  const placed = getPlacedMarchers();
+  const ids = placed.map(m => m.inst.id);
+  const rhythmCount = placed.filter(m => m.inst.category === 'rhythm').length;
+  const melodyCount = placed.filter(m => m.inst.category === 'melody').length;
 
-            const mins = String(Math.floor(state.seconds / 60)).padStart(2, '0');
-            const secs = String(state.seconds % 60).padStart(2, '0');
-            document.getElementById('game-timer').innerText = `${mins}:${secs}`;
-        }
+  const mins = String(Math.floor(stats.elapsedSec / 60)).padStart(2, '0');
+  const secs = String(stats.elapsedSec % 60).padStart(2, '0');
 
-        function finishGame() {
-            state.isGameOver = true;
-            if (state.timerId) clearInterval(state.timerId);
-            soundEngine.stopLoop();
+  let title = '🎉 태평성대 마당놀이 피날레! 🎉';
+  let paragraphs = [];
 
-            const mins = Math.floor(state.seconds / 60);
-            const secs = state.seconds % 60;
+  if (placed.length === 5 && ids.includes('joseon808') && ids.includes('gayageum') && ids.includes('buk')) {
+    title = '👑 동서고금 대통합 · 조선힙스터 어의궤 대합주!';
+    paragraphs.push(
+      '북과 꽹과리의 전통 장단, 가야금·해금·태평소의 깊은 시김새, 그리고 조선 808의 현대적 비트가 5인조 완전체로 광화문 앞을 찬란히 수놓았소!'
+    );
+  } else if (rhythmCount >= 2 && melodyCount === 0) {
+    title = '🥁 천지를 뒤흔든 우레 · 진격의 사물 난타 피날레!';
+    paragraphs.push(
+      '타악기들의 맹렬한 장단만으로 종로에서 왕궁 대문까지 돌파하였소! 다부진 북소리와 날렵한 상쇠의 꽹과리 가락에 광화문 앞이 거대한 축제의 장이 되었소.'
+    );
+  } else if (melodyCount >= 2 && rhythmCount <= 1) {
+    title = '🪕 달빛처럼 스며든 선율 · 풍류방 시김새의 극치!';
+    paragraphs.push(
+      '가야금의 농현과 해금의 활질, 태평소의 맑은 소리가 왕궁 대문을 감쌌소. 화려한 기교와 여백의 미가 살아 있는 천하제일 가락이오.'
+    );
+  } else {
+    title = '🎉 태평성대 마당놀이 피날레! 🎉';
+    paragraphs.push(
+      '종로 시전 거리의 백성과 구경꾼들이 조선 힙스터 악단의 신명 나는 가락에 취해 덩실덩실 춤을 추오!'
+    );
+  }
 
-            document.getElementById('ending-desc-text').innerHTML = `
-                광화문 대문 앞에서 행렬이 우뚝 멈춰 서고, 큰 박이 터지며 오색 꽃가루가 창공을 수놓았소!<br><br>
-                ⏱️ <strong>소요 시각:</strong> ${mins}분 ${secs}초<br>
-                ✨ <strong>어사화 평점:</strong> 한양 도성 백성들과 선비들이 모두 감복한 천하제일 행렬악단이오!
-            `;
-            document.getElementById('ending-screen').classList.remove('hidden');
-        }
-    </script>
+  paragraphs.push(`· [추임새 횟수 ${stats.chuimsaeCount}회]와 [대열 변경 ${stats.swapAndChangeCount}회]를 거쳐 ${mins}분 ${secs}초 만에 왕궁 행렬을 완수하였소!`);
+
+  document.getElementById('endingTitle').textContent = title;
+  document.getElementById('endingBody').textContent = paragraphs.join('\n\n');
+  document.getElementById('statTime').textContent = `${mins}:${secs}`;
+  document.getElementById('statChuimsae').textContent = `${stats.chuimsaeCount}회`;
+  document.getElementById('statSwaps').textContent = `${stats.swapAndChangeCount}회`;
+  document.getElementById('statLineup').textContent = placed.map(m => m.inst.shortName).join('·') || '자유편성';
+
+  document.getElementById('endingModal').classList.remove('hidden');
+}
+
+document.getElementById('continuePlayBtn').addEventListener('click', () => {
+  finaleState = 'infinite';
+  document.getElementById('endingModal').classList.add('hidden');
+  document.getElementById('finaleStepNotice').classList.add('hidden');
+  updateNarrative(0, '무한 풍류 마당이 열렸소! 마음껏 가락을 이어가시오.');
+});
+
+document.getElementById('restartFromEndingBtn').addEventListener('click', () => {
+  document.getElementById('endingModal').classList.add('hidden');
+  document.getElementById('backToTitleBtn').click();
+});
+
+document.getElementById('rhythmBtn').addEventListener('click', (e) => {
+  audio.init();
+  const btn = e.currentTarget;
+  if (audio.mode === 'jungmori') {
+    audio.mode = 'jajinmori';
+    audio.stepInterval = 130;
+    btn.innerHTML = '장단: <em>자진모리 펑크</em>';
+    btn.classList.add('border-rose-400', 'bg-rose-950/60');
+    updateNarrative(0, '빠르게 몰아치는 자진모리 장단으로 걸음을 재촉하오!');
+  } else {
+    audio.mode = 'jungmori';
+    audio.stepInterval = 175;
+    btn.innerHTML = '장단: <em>중모리 붐뱁</em>';
+    btn.classList.remove('border-rose-400', 'bg-rose-950/60');
+    updateNarrative(0, '묵직하고 멋스러운 중모리 장단으로 호흡을 가다듬소!');
+  }
+  if (audio.isPlaying) startSequencer();
+});
+
+document.getElementById('chuimsaeBtn').addEventListener('click', () => {
+  audio.triggerChuimsae();
+  stats.chuimsaeCount++;
+  floatingTexts.push({
+    x: canvas.width / 2,
+    y: 165,
+    text: '얼씨구 좋다~!',
+    color: '#ffd166',
+    alpha: 1.25,
+    vy: -1.1
+  });
+
+  if (getPlacedMarchers().length === 0) {
+    updateNarrative(0, '아직 대열에 합류한 악공이 없소. 먼저 악공을 세우시오.');
+    return;
+  }
+
+  if (chuimsaeCooldown > 0) {
+    addHeung(-0.18, '추임새가 너무 잦아 호흡이 가빠지오.');
+  } else {
+    chuimsaeCooldown = 7;
+    addHeung(0.65, '구성진 추임새에 악공들이 신명이 나서 가락을 더욱 힘차게 몰아치오!');
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  slots = [null, null, null, null, null];
+  clearInteractionStates();
+  stopSequencer();
+  renderDock();
+  renderUnderfootControls();
+  updateNarrative(0, '행렬 대열을 모두 비웠소. 새로이 진영을 갖추시오.');
+});
+
+// =========================================================================
+// V2 오리지널 캔버스 디오라마 배경 및 캐릭터 드로잉 엔진 복원
+// =========================================================================
+function drawMountainsAndDistantRoofs(offset, theme) {
+  ctx.save();
+  ctx.fillStyle = theme.mountainFar;
+  ctx.beginPath();
+  ctx.moveTo(0, 290);
+  for (let x = 0; x <= canvas.width + 60; x += 40) {
+    const y = 165 + Math.sin((x + offset * 0.5) * 0.008) * 35 + Math.cos((x + offset * 0.3) * 0.015) * 20;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(canvas.width, 290);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = theme.mountainNear;
+  ctx.beginPath();
+  ctx.moveTo(0, 300);
+  for (let x = 0; x <= canvas.width + 60; x += 35) {
+    const y = 205 + Math.sin((x + offset) * 0.012) * 25 + Math.cos((x + offset * 0.7) * 0.02) * 15;
+    ctx.lineTo(x, y);
+  }
+  ctx.lineTo(canvas.width, 300);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawJongnoMarketStreet(offset, theme) {
+  const bWidth = 220;
+  const startIdx = Math.floor(offset / bWidth);
+  const localOffset = offset % bWidth;
+
+  for (let i = -1; i < 6; i++) {
+    const bx = i * bWidth - localOffset;
+    const bIdx = startIdx + i;
+    const roofH = (bIdx % 2 === 0) ? 46 : 38;
+    const baseY = 305;
+    const bodyH = 78;
+
+    ctx.save();
+    // 회벽과 목조 기둥
+    ctx.fillStyle = theme.wallColor;
+    ctx.fillRect(bx + 12, baseY - bodyH, bWidth - 24, bodyH);
+
+    ctx.fillStyle = theme.woodColor;
+    for (let p = 0; p < 4; p++) {
+      ctx.fillRect(bx + 14 + p * 62, baseY - bodyH, 7, bodyH);
+    }
+    ctx.fillRect(bx + 10, baseY - bodyH, bWidth - 20, 6);
+    ctx.fillRect(bx + 10, baseY - 28, bWidth - 20, 5);
+
+    // 창호 불빛
+    ctx.fillStyle = theme.windowGlow;
+    ctx.fillRect(bx + 28, baseY - bodyH + 14, 42, 32);
+    ctx.fillRect(bx + 90, baseY - bodyH + 14, 42, 32);
+    ctx.fillRect(bx + 152, baseY - bodyH + 14, 38, 32);
+
+    // 전통 기와지붕 곡선
+    ctx.fillStyle = theme.roofBase;
+    ctx.beginPath();
+    ctx.moveTo(bx - 4, baseY - bodyH + 4);
+    ctx.quadraticCurveTo(bx + bWidth / 2, baseY - bodyH - roofH, bx + bWidth + 4, baseY - bodyH + 4);
+    ctx.lineTo(bx + bWidth - 10, baseY - bodyH - roofH + 10);
+    ctx.quadraticCurveTo(bx + bWidth / 2, baseY - bodyH - roofH - 8, bx + 10, baseY - bodyH - roofH + 10);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = theme.roofLine;
+    ctx.lineWidth = 2;
+    for (let r = bx + 10; r < bx + bWidth - 10; r += 14) {
+      ctx.beginPath();
+      ctx.moveTo(r, baseY - bodyH - roofH + 14);
+      ctx.lineTo(r - 4, baseY - bodyH + 2);
+      ctx.stroke();
+    }
+
+    // 처마 밑 청사초롱 등불
+    if (theme.lanternAlpha > 0) {
+      const lx = bx + bWidth - 30;
+      const ly = baseY - bodyH + 12;
+      ctx.save();
+      ctx.globalAlpha = theme.lanternAlpha;
+      ctx.fillStyle = 'rgba(255, 180, 60, 0.32)';
+      ctx.beginPath();
+      ctx.arc(lx, ly + 8, 16 + beatPulse * 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ef476f';
+      ctx.beginPath();
+      ctx.ellipse(lx, ly + 4, 6, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#3b82f6';
+      ctx.beginPath();
+      ctx.ellipse(lx, ly + 10, 6, 6, 0, 0, Math.PI);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+}
+
+function drawTraditionalRoad(offset, theme) {
+  ctx.save();
+  ctx.fillStyle = theme.roadBase;
+  ctx.fillRect(0, 305, canvas.width, canvas.height - 305);
+
+  ctx.strokeStyle = theme.roadLine;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 312);
+  ctx.lineTo(canvas.width, 312);
+  ctx.stroke();
+
+  const stoneGap = 90;
+  const sOffset = offset % stoneGap;
+  for (let x = -sOffset; x < canvas.width + stoneGap; x += stoneGap) {
+    ctx.beginPath();
+    ctx.moveTo(x, 312);
+    ctx.lineTo(x - 28, canvas.height);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawPalaceGateAndGourd(gateX, baseY, theme) {
+  ctx.save();
+  ctx.translate(gateX, baseY);
+
+  // 석축 기단 및 홍예문(아치문)
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillRect(-110, -110, 220, 110);
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-110, -110, 220, 110);
+
+  ctx.fillStyle = '#1e293b';
+  ctx.beginPath();
+  ctx.arc(0, 0, 44, Math.PI, 0);
+  ctx.lineTo(44, 0);
+  ctx.lineTo(-44, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2층 문루 기둥 및 단청
+  ctx.fillStyle = '#991b1b';
+  ctx.fillRect(-95, -185, 190, 75);
+  ctx.fillStyle = '#065f46';
+  ctx.fillRect(-98, -192, 196, 12);
+
+  // 중층 기와지붕
+  ctx.fillStyle = '#1e2433';
+  ctx.beginPath();
+  ctx.moveTo(-125, -182);
+  ctx.quadraticCurveTo(0, -230, 125, -182);
+  ctx.lineTo(100, -218);
+  ctx.quadraticCurveTo(0, -242, -100, -218);
+  ctx.closePath();
+  ctx.fill();
+
+  // 광화문 현판
+  ctx.fillStyle = '#f8fafc';
+  ctx.fillRect(-32, -175, 64, 22);
+  ctx.strokeStyle = '#b45309';
+  ctx.strokeRect(-32, -175, 64, 22);
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 11px "Gowun Batang", serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('光 化 門', 0, -160);
+
+  // 지붕 위 대형 복박 (피날레 박 터뜨리기 연출)
+  const gourdY = -245;
+  if (finaleState !== 'gourd_burst' && finaleState !== 'ended') {
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(0, gourdY, 26 + beatPulse * 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  } else {
+    // 갈라진 박과 현수막
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(-22, gourdY, 24, Math.PI * 0.5, Math.PI * 1.5);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(22, gourdY, 24, -Math.PI * 0.5, Math.PI * 0.5);
+    ctx.fill();
+
+    ctx.fillStyle = '#fef3c7';
+    ctx.fillRect(-26, gourdY + 10, 52, 95);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-26, gourdY + 10, 52, 95);
+    ctx.fillStyle = '#b91c1c';
+    ctx.font = 'bold 14px "Gowun Batang", serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('태 평', 0, gourdY + 45);
+    ctx.fillText('성 대', 0, gourdY + 75);
+  }
+
+  ctx.restore();
+}
+
+// 캐릭터별 고유 개성 일러스트 및 모션 (커스텀 이미지가 활성화되면 해당 이미지를 렌더링)
+function drawMarcherCharacter(marcher, slotIdx, pos) {
+  const inst = marcher.inst;
+  const id = inst.id;
+  marcher.motionScale = Math.max(0, (marcher.motionScale || 0) - 0.05);
+  const m = marcher.motionScale;
+
+  const walkCycle = Math.sin(scrollOffset * 0.12 + slotIdx * 1.3);
+  const bounceY = marcher.muted ? 0 : Math.abs(walkCycle) * 6 + m * 9;
+
+  ctx.save();
+  ctx.translate(pos.x, pos.y - bounceY);
+  if (marcher.muted) ctx.globalAlpha = 0.45;
+
+  // 솔로 오라 이펙트
+  if (marcher.solo && !marcher.muted) {
+    ctx.save();
+    ctx.strokeStyle = '#ffd166';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(0, -48, 52 + beatPulse * 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // [패치 2] 커스텀 캐릭터 이미지가 설정되어 있고 로드 완료된 경우 이미지로 그리기
+  const customImg = loadedCharImages[id];
+  if (ASSETS.useCustomCharImages?.[id] && customImg && customImg.complete && customImg.naturalWidth > 0) {
+    const imgW = 110;
+    const imgH = 145;
+    ctx.rotate(Math.sin(scrollOffset * 0.08 + slotIdx) * 0.03 * (1 + m));
+    ctx.drawImage(customImg, -imgW / 2, -imgH + 12, imgW, imgH);
+    ctx.restore();
+    return;
+  }
+
+  // 기본 V2 캐릭터별 체형·복식·악기·표정 드로잉
+  let bodyW = 36, bodyH = 68, headR = 16;
+  if (id === 'buk') { bodyW = 48; bodyH = 66; headR = 17.5; }          // 다부지고 덩치 큰 북잡이
+  else if (id === 'kkwaeng') { bodyW = 30; bodyH = 78; headR = 15; }   // 마르고 키 큰 상쇠
+  else if (id === 'gayageum') { bodyW = 36; bodyH = 70; headR = 15.5; }// 푸른 도포 선비
+  else if (id === 'haegeum') { bodyW = 44; bodyH = 64; headR = 16; }   // 풍성한 치마의 해금 여류 악사
+  else if (id === 'taepyeongso') { bodyW = 32; bodyH = 60; headR = 16; }// 청소년기 소년 악공
+
+  // 발걸음 다리
+  ctx.fillStyle = '#f8fafc';
+  const legSwing = marcher.muted ? 0 : walkCycle * 7;
+  ctx.fillRect(-10 + legSwing * 0.5, -10, 7, 14);
+  ctx.fillRect(3 - legSwing * 0.5, -10, 7, 14);
+
+  // 한복 도포 / 치마 몸통
+  ctx.fillStyle = inst.robeColor;
+  ctx.beginPath();
+  ctx.moveTo(-bodyW * 0.42, -bodyH);
+  ctx.lineTo(bodyW * 0.42, -bodyH);
+  ctx.lineTo(bodyW * 0.58 + m * 5, -8);
+  ctx.lineTo(-bodyW * 0.58 - m * 5, -8);
+  ctx.closePath();
+  ctx.fill();
+
+  // 쾌자(조끼) 및 허리띠
+  ctx.fillStyle = inst.vestColor;
+  ctx.fillRect(-bodyW * 0.34, -bodyH, bodyW * 0.68, bodyH * 0.55);
+  ctx.fillStyle = inst.sashColor;
+  ctx.fillRect(-bodyW * 0.45, -bodyH * 0.52, bodyW * 0.9, 7);
+
+  // 얼굴
+  const headY = -bodyH - headR + 2;
+  ctx.fillStyle = '#fde68a';
+  ctx.beginPath();
+  ctx.arc(0, headY, headR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 캐릭터별 표정 및 모자/머리 장식
+  ctx.strokeStyle = '#1e293b';
+  ctx.fillStyle = '#1e293b';
+  ctx.lineWidth = 2;
+
+  if (id === 'buk') {
+    // 붉은 머리띠와 호쾌한 눈썹
+    ctx.fillStyle = '#ef476f';
+    ctx.fillRect(-headR, headY - 8, headR * 2, 5);
+    ctx.beginPath();
+    ctx.moveTo(-7, headY - 2); ctx.lineTo(-2, headY);
+    ctx.moveTo(7, headY - 2); ctx.lineTo(2, headY);
+    ctx.stroke();
+    // 커다란 북과 북채 모션
+    ctx.fillStyle = '#78350f';
+    ctx.beginPath();
+    ctx.arc(14, -bodyH * 0.48, 22 + m * 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fef3c7';
+    ctx.beginPath();
+    ctx.arc(14, -bodyH * 0.48, 17 + m * 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (id === 'kkwaeng') {
+    // 전립 모자와 역동적으로 돌아가는 상모 물채
+    ctx.fillStyle = '#111827';
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 10, 22, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(0, headY - 14);
+    const ribbonPhase = scrollOffset * 0.22;
+    ctx.bezierCurveTo(
+      Math.cos(ribbonPhase) * (34 + m * 18), headY - 48 - m * 12,
+      Math.sin(ribbonPhase) * (42 + m * 20), headY - 26,
+      Math.cos(ribbonPhase + 1.5) * 30, headY - 40
+    );
+    ctx.stroke();
+    // 황금빛 꽹과리
+    ctx.fillStyle = '#fbbf24';
+    ctx.beginPath();
+    ctx.arc(18, -bodyH * 0.55 - m * 8, 12, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (id === 'gayageum') {
+    // 흑립(갓)과 시크한 일자 눈매
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(-10, headY - 22, 20, 12);
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 10, 28, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-7, headY); ctx.lineTo(-2, headY);
+    ctx.moveTo(2, headY); ctx.lineTo(7, headY);
+    ctx.stroke();
+    // 가야금 오동나무 판
+    ctx.save();
+    ctx.translate(4, -bodyH * 0.45);
+    ctx.rotate(-0.18 + m * 0.06);
+    ctx.fillStyle = '#92400e';
+    ctx.fillRect(-28, -5, 56, 10);
+    ctx.restore();
+  } else if (id === 'haegeum') {
+    // 댕기 머리와 활짝 웃는 눈웃음
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(0, headY - 4, headR, Math.PI, 0);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(-5, headY - 1, 3, Math.PI, 0);
+    ctx.arc(5, headY - 1, 3, Math.PI, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, headY + 4, 4, 0, Math.PI);
+    ctx.stroke();
+    // 해금 공명통과 큰 활대 모션
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(12, -bodyH * 0.25);
+    ctx.lineTo(12, -bodyH * 0.85);
+    ctx.stroke();
+    ctx.strokeStyle = '#f8fafc';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(-8 + m * 16, -bodyH * 0.55);
+    ctx.lineTo(30 + m * 16, -bodyH * 0.5);
+    ctx.stroke();
+  } else if (id === 'taepyeongso') {
+    // 복건과 초롱초롱한 큰 눈망울
+    ctx.fillStyle = '#1e3a8a';
+    ctx.beginPath();
+    ctx.arc(0, headY - 5, headR, Math.PI, 0);
+    ctx.fill();
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(-5, headY, 2.6, 0, Math.PI * 2);
+    ctx.arc(5, headY, 2.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-5.8, headY - 0.8, 1, 0, Math.PI * 2);
+    ctx.arc(4.2, headY - 0.8, 1, 0, Math.PI * 2);
+    ctx.fill();
+    // 태평소 황동 동팔랑(원추형 벨)
+    ctx.save();
+    ctx.translate(8, headY + 5);
+    ctx.rotate(-0.25 - m * 0.22);
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(26, -9);
+    ctx.lineTo(26, 9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  } else if (id === 'joseon808') {
+    // 힙스터 갓과 선글라스, 목조 MPC 비트 패드
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.ellipse(0, headY - 10, 26, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#0ea5e9';
+    ctx.fillRect(-10, headY - 3, 8, 5);
+    ctx.fillRect(2, headY - 3, 8, 5);
+    ctx.fillStyle = '#a855f7';
+    ctx.fillRect(-16, -bodyH * 0.52 + m * 3, 32, 12);
+  }
+
+  ctx.restore();
+}
+
+function drawScene() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const theme = TIME_THEMES[currentTimeOfDay];
+
+  let speed = 0.25;
+  if (getPlacedMarchers().length > 0) {
+    if (finaleState === 'performing_4bars' || finaleState === 'gourd_burst' || finaleState === 'ended') {
+      speed = 0;
+    } else {
+      speed = audio.mode === 'jajinmori' ? 2.4 : 1.45;
+    }
+  }
+  scrollOffset += speed;
+  beatPulse = Math.max(0, beatPulse - 0.06);
+
+  if (finaleState === 'approaching_gate') {
+    palaceGateX -= Math.max(1.8, speed * 1.15);
+    if (palaceGateX <= 885) {
+      palaceGateX = 885;
+      finaleState = 'performing_4bars';
+      finaleStepsRemaining = 48;
+      updateNarrative(0, '🏯 왕궁 대문 앞에 당도하여 멈춰 섰소! 4마디 피날레 대합주를 시작하오!');
+    }
+  }
+
+  // 하늘 그라데이션 및 해/달
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, 330);
+  skyGrad.addColorStop(0, theme.skyTop);
+  skyGrad.addColorStop(1, theme.skyBottom);
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.save();
+  ctx.fillStyle = theme.sunGlow;
+  ctx.beginPath();
+  ctx.arc(840, 86, 52 + beatPulse * 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = theme.sunColor;
+  ctx.beginPath();
+  ctx.arc(840, 86, 33, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  drawMountainsAndDistantRoofs(scrollOffset * 0.2, theme);
+  drawJongnoMarketStreet(scrollOffset * 0.65, theme);
+  drawTraditionalRoad(scrollOffset, theme);
+
+  if (finaleState !== 'marching') {
+    drawPalaceGateAndGourd(palaceGateX, 325, theme);
+  }
+
+  const blinkWave = 0.5 + 0.5 * Math.sin(performance.now() * 0.012);
+
+  // [패치 5] 5개 슬롯 바닥 원(대열1~5 자막 제거, 선택/이동 대기 시 깜빡임 효과) 및 캐릭터 그리기
+  for (let i = 0; i < 5; i++) {
+    const pos = getSlotScreenPos(i);
+    const marcher = slots[i];
+    ctx.save();
+
+    const isEmptySlotBlinking = (!marcher && (pendingInst !== null || swapSourceIndex !== null || pendingEmptySlot === i));
+    const isSwapSource = (swapSourceIndex === i);
+
+    if (isEmptySlotBlinking) {
+      ctx.fillStyle = `rgba(6, 214, 160, ${0.15 + blinkWave * 0.35})`;
+      ctx.strokeStyle = '#06d6a0';
+      ctx.lineWidth = 2.5 + blinkWave * 2;
+    } else if (isSwapSource) {
+      ctx.fillStyle = 'rgba(6, 214, 160, 0.25)';
+      ctx.strokeStyle = '#06d6a0';
+      ctx.lineWidth = 3;
+    } else if (marcher) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+      ctx.strokeStyle = marcher.inst.color;
+      ctx.lineWidth = 2.2;
+    } else {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.lineWidth = 1.8;
+    }
+
+    ctx.beginPath();
+    ctx.ellipse(pos.x, pos.y + 14, 44, 11, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    if (marcher) {
+      drawMarcherCharacter(marcher, i, pos);
+    }
+  }
+
+  // 구음 플로팅 텍스트
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const ft = floatingTexts[i];
+    ft.y += ft.vy;
+    ft.alpha -= 0.022;
+    if (ft.alpha <= 0) {
+      floatingTexts.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, ft.alpha);
+    ctx.font = 'bold 15px "Gowun Batang", serif';
+    ctx.fillStyle = ft.color;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = 4;
+    ctx.fillText(ft.text, ft.x, ft.y);
+    ctx.restore();
+  }
+
+  // 피날레 꽃가루
+  for (let i = confetti.length - 1; i >= 0; i--) {
+    const c = confetti[i];
+    c.x += c.vx;
+    c.y += c.vy;
+    c.vy += 0.05;
+    if (c.y > canvas.height) {
+      confetti.splice(i, 1);
+      continue;
+    }
+    ctx.save();
+    ctx.fillStyle = c.color;
+    ctx.fillRect(c.x, c.y, c.size, c.size * 0.6);
+    ctx.restore();
+  }
+
+  requestAnimationFrame(drawScene);
+}
+
+renderDock();
+renderUnderfootControls();
+requestAnimationFrame(drawScene);
+</script>
 </body>
 </html>
