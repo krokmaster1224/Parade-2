@@ -464,31 +464,89 @@
       </div>
     </div>
 
-    <!-- === [CHAPTER 1: 버전 표시 및 왕의 시가(어제시) 모달 UI] === -->
-    <!-- 타이틀 화면 오른쪽 맨 아래 버전 표시 -->
-    <div class="fixed bottom-2.5 right-3.5 text-[11px] text-slate-400/80 font-mono pointer-events-none select-none">
-      v4.1.1
+<!-- === [CHAPTER 1: 버전 표시(개발자 모드 트리거) · 두루마리 모달 · 대결 안내 · 페이지형 게임방법 UI] === -->
+    <!-- 타이틀 및 인게임 우측 하단 버전 표시 (10번 연속 클릭 시 개발자 모드 진입) -->
+    <div id="versionBadge" class="fixed bottom-2 right-3 z-[60] text-[11px] text-slate-400/85 hover:text-amber-300 font-mono cursor-pointer select-none px-1.5 py-0.5 rounded bg-slate-950/60 border border-white/10 transition" title="10번 연속 클릭 시 개발자 모드">
+      v4.1.2
+    </div>
+
+    <!-- 개발자 모드 활성화 시 상단에 나타나는 퀵 테스트 툴바 -->
+    <div id="devModeBar" class="hidden fixed top-1.5 left-1/2 -translate-x-1/2 z-[60] bg-rose-950/95 border border-rose-400 px-3 py-1 rounded-full shadow-xl flex items-center gap-2 text-[10px] sm:text-xs">
+      <span class="text-rose-200 font-bold">🛠️ DEV</span>
+      <button id="devFillStatBtn" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-amber-300">스탯만점</button>
+      <button id="devSkipBattleBtn" class="px-2 py-0.5 rounded bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold">맞쇠대결 스킵▶</button>
+      <button id="devSkipEndingBtn" class="px-2 py-0.5 rounded bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold">엔딩보기▶</button>
     </div>
   </div>
 
-  <!-- [v4.1.1 신규] 출정 직전 '왕의 시가(어제시 교지)' 제시 모달 -->
-  <div id="royalDecreeModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
-    <div class="bg-[#1c1613] border-2 border-amber-400/80 rounded-2xl max-w-md w-full p-5 text-center shadow-[0_0_45px_rgba(251,191,36,0.28)]">
-      <span class="inline-block px-3 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/50 text-amber-200 text-[11px] mb-2">
-        📜 행차 어제시(御製詩) · 성상의 심기를 읽으시오
+  <!-- [v4.1.2] 조선 시대 전통 한지 두루마리(Scroll) 디자인의 왕의 시가 모달 -->
+  <div id="royalDecreeModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-3">
+    <div class="max-w-md w-full flex flex-col items-center">
+      <!-- 상단 두루마리 나무 축 -->
+      <div class="w-[104%] h-4 rounded-full bg-gradient-to-b from-[#78350f] via-[#451a03] to-[#290f02] border-y border-amber-500/60 shadow-lg flex justify-between items-center px-1">
+        <div class="w-3 h-3 rounded-full bg-amber-400/90"></div>
+        <div class="w-3 h-3 rounded-full bg-amber-400/90"></div>
+      </div>
+
+      <!-- 중앙 한지 두루마리 본문 -->
+      <div class="w-full bg-gradient-to-b from-[#f5ebd6] via-[#fdf8ed] to-[#efe0c2] text-[#291d12] px-5 py-4 border-x-4 border-[#854d0e] shadow-[0_15px_45px_rgba(0,0,0,0.85)] relative">
+        <div class="flex justify-between items-center border-b border-[#b45309]/30 pb-2 mb-3">
+          <span class="text-xs font-bold text-[#9a3412] bg-[#fed7aa] px-2.5 py-0.5 rounded-full border border-[#c2410c]/30">
+            📜 예조판서의 귀띔 : 전하의 심기에 맞추거라!
+          </span>
+          <span class="text-[10px] font-serif font-bold text-red-700 border-2 border-red-700 px-1 py-0.2 rounded rotate-6 select-none">
+            御命之寶
+          </span>
+        </div>
+
+        <h3 id="decreeTitle" class="serif-title text-lg sm:text-xl text-[#451a03] font-bold text-center mb-2">
+          〈여민동락(與民同樂)의 노래〉
+        </h3>
+
+        <div class="bg-[#e7d6b5]/70 border border-[#a16207]/40 rounded-xl p-3.5 mb-3">
+          <p id="decreePoemText" class="serif-title text-xs sm:text-sm text-[#1c1917] font-semibold leading-relaxed whitespace-pre-line text-center"></p>
+        </div>
+
+        <div class="bg-[#291d12] text-amber-100 rounded-xl p-2.5 mb-4 text-left text-[11px] sm:text-xs border border-amber-500/40">
+          <div id="decreeRivalName" class="text-rose-300 font-bold mb-0.5">⚔️ 오늘 맞붙을 라이벌: 장악원 고집불통 정악단</div>
+          <div id="decreeRivalDebuff" class="text-slate-200 leading-snug text-[10px] sm:text-[11px]"></div>
+        </div>
+
+        <button id="confirmDecreeStartBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-[#b91c1c] via-[#dc2626] to-[#b91c1c] text-amber-200 font-bold text-sm sm:text-base border-2 border-amber-300 shadow-lg hover:scale-[1.02] active:scale-95 transition">
+          조선힙스터 출정이오-! 🥁
+        </button>
+      </div>
+
+      <!-- 하단 두루마리 나무 축 -->
+      <div class="w-[104%] h-4 rounded-full bg-gradient-to-b from-[#78350f] via-[#451a03] to-[#290f02] border-y border-amber-500/60 shadow-lg flex justify-between items-center px-1">
+        <div class="w-3 h-3 rounded-full bg-amber-400/90"></div>
+        <div class="w-3 h-3 rounded-full bg-amber-400/90"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [v4.1.2 신규] 꽹과리 맞쇠(짝쇠) 대결 직전 조작법 설명 모달 -->
+  <div id="battleGuideModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-amber-300 rounded-2xl max-w-md w-full p-5 text-center shadow-[0_0_45px_rgba(255,209,102,0.35)]">
+      <span class="inline-block px-3 py-0.5 rounded-full bg-amber-300/20 border border-amber-300/50 text-amber-200 text-xs mb-2">
+        🪙 광화문 어전 · 상쇠 1:1 맞쇠(짝쇠) 대결!
       </span>
-      <h3 id="decreeTitle" class="serif-title text-lg sm:text-xl text-amber-300 font-bold mb-3">
-        〈여민동락(與民同樂)의 노래〉
+      <h3 class="serif-title text-xl text-amber-300 font-bold mb-2">
+        상대 상쇠의 가락을 그대로 받아치시오!
       </h3>
-      <div class="bg-[#29201b] border border-amber-200/30 rounded-xl p-4 mb-3 text-left">
-        <p id="decreePoemText" class="serif-title text-xs sm:text-sm text-amber-50 leading-relaxed whitespace-pre-line"></p>
+      <div id="battleGuideStatSummary" class="bg-slate-950/90 border border-emerald-400/40 rounded-xl p-2.5 mb-3 text-xs text-emerald-300 font-semibold">
+        스탯 기싸움 결과: 45 / 50점 (박자 판정 완화 버프 적용!)
       </div>
-      <div class="bg-slate-900/90 border border-rose-400/40 rounded-lg p-2.5 mb-4 text-left text-[11px] sm:text-xs">
-        <div id="decreeRivalName" class="text-rose-300 font-bold mb-0.5">⚔️ 경쟁 악단: 장악원 고집불통 정악단</div>
-        <div id="decreeRivalDebuff" class="text-slate-300 leading-snug">· 방해 특성: 상대의 엄격한 기세 때문에 신명·해학 스탯이 더 빠르게 감소하오.</div>
+      <div class="text-left bg-slate-800/70 rounded-xl p-3 space-y-2 text-xs text-slate-200 mb-4 leading-relaxed">
+        <p>1. <em>메기고 받기(총 8합):</em> 상대 상쇠가 먼저 1마디 동안 꽹과리를 치면(선공), 바로 다음 마디에 똑같은 리듬으로 받아치시오(후공)!</p>
+        <p>2. <em>조작 방법:</em>
+          <br>· 💻 <em>PC 환경:</em> 키보드 <em>[Spacebar (스페이스바)]</em> 또는 화면 아래 꽹과리 패드 마우스 클릭!
+          <br>· 📱 <em>모바일 환경:</em> 화면 아래 <em>[황동 꽹과리 패드]</em>를 손가락으로 터치!
+        </p>
+        <p>3. <em>주의사항 (오답 감점):</em> 박자 판정은 넉넉하게 보정되지만, <em>엉뚱한 박자에 마구 연타하여 틀리면 점수가 크게 깎이니(-4점)</em> 잘 듣고 치시오!</p>
       </div>
-      <button id="confirmDecreeStartBtn" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-300 to-amber-500 text-slate-950 font-bold text-xs sm:text-sm shadow-lg hover:scale-[1.02] transition">
-        어명을 받들어 행렬 출정하기 ▶
+      <button id="startBattleConfirmBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amber-300 to-rose-500 text-slate-950 font-bold text-sm shadow-lg hover:scale-[1.02] transition">
+        맞쇠 대결 시작하기! ⚡
       </button>
     </div>
   </div>
@@ -509,20 +567,64 @@
     </div>
   </div>
 
-  <!-- 게임 방법 모달 -->
+  <!-- [v4.1.2 개편] 4페이지 분량의 상세 게임 방법 모달 -->
   <div id="howToModal" class="hidden fixed inset-0 z-50 bg-slate-950/90 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-amber-300/40 rounded-2xl max-w-lg w-full p-5 space-y-3">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
-        <h3 class="serif-title text-lg sm:text-xl text-amber-300">게임 방법 및 짝쇠 대결 안내</h3>
-        <button id="closeHowToBtn" class="text-slate-400 hover:text-white text-sm">✕ 닫기</button>
+    <div class="bg-slate-900 border-2 border-amber-300/50 rounded-2xl max-w-lg w-full p-5 flex flex-col justify-between min-h-[340px] shadow-2xl">
+      <div>
+        <div class="flex justify-between items-center border-b border-slate-800 pb-2.5 mb-3">
+          <h3 id="howToPageTitle" class="serif-title text-base sm:text-xl text-amber-300 font-bold">
+            📖 행렬 지휘 안내서 (1 / 4)
+          </h3>
+          <button id="closeHowToBtn" class="text-slate-400 hover:text-white text-sm">✕ 닫기</button>
+        </div>
+
+        <!-- 페이지 1: 게임의 목표와 왕의 시가 -->
+        <div id="howToPage_0" class="howto-page space-y-2.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
+          <div class="text-amber-300 font-bold text-sm">1장. 전하의 심기(두루마리)와 출정 목표</div>
+          <p>· 출정 전 펼쳐지는 <em>한지 두루마리</em>에는 전하께서 이번 행차에서 원하시는 <em>핵심 풍류 스탯 2가지</em>가 적혀 있습니다.</p>
+          <p>· 풍류 스탯은 <em>🔥신명(열기) · 🪨기품(위엄) · 🎭해학(익살) · 🌊여운(서정성)</em>의 4가지로 나뉩니다.</p>
+          <p>· 동시에 우리를 방해하는 <em>라이벌 풍물패</em>가 등장하여 특정 스탯을 더 빨리 깎아내립니다. 흥(興) 게이지가 100%에 도달할 때까지 전하께서 원하시는 목표 스탯 수치를 달성하고 유지하는 것이 1차 목표입니다!</p>
+        </div>
+
+        <!-- 페이지 2: 자리별 리듬 변화와 스탯 저글링 -->
+        <div id="howToPage_1" class="howto-page hidden space-y-2.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
+          <div class="text-emerald-300 font-bold text-sm">2장. 1~5번 자리별 연주 변화와 스탯 저글링</div>
+          <p>· 행렬에는 <em>1번(맨 뒤)부터 5번(선두 대장)</em>까지 다섯 자리가 있으며, 선두로 갈수록 연주 밀도가 <em>1.5단계 ➔ 4.0단계</em>까지 화려해지고 스탯 충전 속도도 최대 <em>1.55배</em> 빨라집니다.</p>
+          <p>· 모든 스탯은 가만히 두면 <em>자연 감소</em>하며, 상극인 악기를 함께 켜두면 반대 스탯이 더 빨리 빠져나갑니다.</p>
+          <p>· 따라서 부족한 스탯을 올릴 때는 해당 악기를 <em>5번 선두 자리</em>로 보내거나 <em>[S (솔로)]</em> 버튼을 켜서 2배속으로 급속 충전하고, 방해되는 악기는 <em>[M (뮤트)]</em>로 잠시 쉬게 하는 지휘가 필요합니다!</p>
+        </div>
+
+        <!-- 페이지 3: 직관적인 캐릭터 이동과 도크 확인 -->
+        <div id="howToPage_2" class="howto-page hidden space-y-2.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
+          <div class="text-sky-300 font-bold text-sm">3장. 캐릭터 몸체 터치 이동 & 악공 확인법</div>
+          <p>· <em>자유로운 배치:</em> 아래 픽창에서 악공을 먼저 누르거나, 행렬의 빈 바닥 원을 먼저 눌러 원하는 위치 어디든 악공을 세울 수 있습니다.</p>
+          <p>· <em>몸체 클릭 이동:</em> 발밑의 <em>[↔]</em> 버튼뿐만 아니라, 행렬에 서 있는 <em>캐릭터의 몸체를 직접 클릭</em>해도 즉시 이동 모드가 켜집니다! 이어서 다른 캐릭터나 빈자리를 누르면 자리가 바뀝니다.</p>
+          <p>· <em>픽창 깜빡임 연동:</em> 캐릭터의 몸체를 누르면 <em>아래 픽창에서 그 캐릭터의 카드가 밝게 깜빡여</em> 현재 자리에 누가 서 있는지 헷갈리지 않고 바로 확인할 수 있습니다.</p>
+        </div>
+
+        <!-- 페이지 4: 광화문 꽹과리 맞쇠 대결 -->
+        <div id="howToPage_3" class="howto-page hidden space-y-2.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
+          <div class="text-rose-300 font-bold text-sm">4장. 광화문 8합 꽹과리 맞쇠(짝쇠) 대결</div>
+          <p>· 흥 게이지 100%로 광화문에 당도하면, 먼저 그간 유지한 <em>4대 스탯을 심사(최대 50점)</em>하고 주인공 <em>조선힙스터(상쇠)</em>가 등판합니다.</p>
+          <p>· 이어지는 <em>맞쇠 대결(최대 50점, 총 8합)</em>에서는 상대 상쇠가 1마디(12소박) 동안 메기는 리듬을 듣고, 다음 마디에 <em>PC [스페이스바]</em> 또는 <em>모바일 [꽹과리 패드]</em>를 두드려 똑같이 받아칩니다.</p>
+          <p>· 박자 판정은 넉넉하지만 <em>엉뚱한 박자에 오타를 내면 감점(-4점)</em>되니 주의하세요. 합산 100점 만점으로 최종 관직 품계가 결정됩니다!</p>
+        </div>
       </div>
-      <div class="space-y-2.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
-        <p>1. <em>상대 풍물패 맞춤 4대 스탯 조율:</em> 출정 시 오늘 맞붙을 상대 풍물패와 목표 스탯(<em>🔥신명 · 🪨기품 · 🎭해학 · 🌊여운</em>)이 공개됩니다. 8종의 악기 조합, <em>5번 선두 대장 자리(스탯 1.5배 증폭)</em>, <em>장단 전환</em>, 그리고 <em>솔로(S) 연주 숙성</em>을 활용해 목표 수치를 달성하세요!</p>
-        <p>2. <em>스탯 기싸움과 판정 버프:</em> 흥 게이지 100%로 광화문에 도착하면 주인공 <em>조선힙스터(상쇠)</em>가 등판해 상대 풍물패와 스탯을 비교(최대 50점)합니다. 스탯이 우세하면 이어지는 대결의 판정 범위가 넓어집니다.</p>
-        <p>3. <em>꽹과리 메기고 받기(짝쇠) 대결:</em> 상대 상쇠가 <em>1마디(12소박) 동안 메기는 리듬</em>을 듣고, 바로 다음 마디에 <em>황동 꽹과리 패드</em>를 터치해 그대로 받아치세요(최대 50점). 총 3합의 점수를 합산해 최종 승패와 품계를 가립니다!</p>
-      </div>
-      <div class="pt-2 text-right">
-        <button id="confirmHowToBtn" class="px-5 py-2 rounded-lg bg-amber-300 text-slate-950 font-semibold text-xs">확인했습니다</button>
+
+      <!-- 하단 페이지 네비게이션 -->
+      <div class="flex justify-between items-center pt-3 mt-4 border-t border-slate-800">
+        <button id="howToPrevBtn" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition">
+          ◀ 이전 쪽
+        </button>
+        <div id="howToDots" class="flex gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-amber-300"></span>
+          <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+          <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+          <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+        </div>
+        <button id="howToNextBtn" class="px-3.5 py-1.5 rounded-lg bg-amber-300 hover:bg-amber-400 text-slate-950 text-xs font-bold transition">
+          다음 쪽 ▶
+        </button>
       </div>
     </div>
   </div>
@@ -953,78 +1055,75 @@ const PICKABLE_INSTRUMENTS = [
   }
 ];
 
-// === [CHAPTER 2: 왕의 시가 6종 · 상대 풍물패 4팀 · 8합 짝쇠 대결 데이터] ===
-// 1) 왕의 시가(어제시) 6종: 4대 스탯 중 2가지씩을 집중 공략 목표로 제시
+// === [CHAPTER 2: 왕의 시가 6종(신하의 귀띔 톤) · 상대 풍물패 4팀 · 8합 짝쇠 대결 데이터] ===
 const ROYAL_DECREES = [
   {
     id: 'shin_hae',
-    title: '〈여민동락(與民同樂)의 노래〉',
+    title: '〈여민동락 : 백성과 함께 웃고 춤추리라〉',
     focusStats: ['shin', 'hae'],
-    poemEasy: '“긴 농사철에 지친 만백성이 오늘만큼은 무거운 짐을 내려놓고,\n저자거리에서 배꼽을 잡고 웃으며 <span class="text-amber-300 font-sans text-[11px]">(🎭해학)</span>\n밤이 새도록 덩실덩실 어깨춤을 추는 <span class="text-rose-300 font-sans text-[11px]">(🔥신명)</span> 모습을 보고 싶구나.”',
-    poemHard: '“긴 농사철에 지친 만백성이 오늘만큼은 무거운 짐을 내려놓고,\n저자거리에서 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">배꼽을 잡고 웃으며</u>\n밤이 새도록 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">덩실덩실 어깨춤을 추는</u> 모습을 보고 싶구나.”'
+    poemEasy: '“전하께서 말씀하시길,\n‘농사철에 지친 백성들이 오늘만큼은 배꼽 잡고 웃으며 (🎭해학)\n밤새도록 신명 나게 춤추는 (🔥신명) 모습을 보고 싶구나!’ 하셨다.\n👉 [🔥신명]과 [🎭해학]을 집중적으로 높여 전하의 심기를 맞추거라!”',
+    poemHard: '“전하께서 말씀하시길,\n‘농사철에 지친 백성들이 오늘만큼은 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">배꼽 잡고 크게 웃으며</u>\n밤새도록 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">어깨춤을 들썩이는</u> 모습을 보고 싶구나!’ 하셨다.\n👉 전하의 말씀 속에 담긴 두 가지 기운을 파악해 높이거라!”'
   },
   {
     id: 'gi_yeo',
-    title: '〈종묘사직(宗廟社稷)의 노래〉',
+    title: '〈종묘사직 : 흔들림 없는 왕실의 위엄〉',
     focusStats: ['gi', 'yeo'],
-    poemEasy: '“선대왕들께서 일구신 천년 도성의 법도가 흔들림 없이 우뚝 서고 <span class="text-sky-300 font-sans text-[11px]">(🪨기품)</span>,\n그 은덕이 강물처럼 고요하고 깊게 만백성의 마음에 스며들기를 <span class="text-emerald-300 font-sans text-[11px]">(🌊여운)</span> 바라노라.”',
-    poemHard: '“선대왕들께서 일구신 천년 도성의 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">법도가 흔들림 없이 우뚝 서고</u>,\n그 은덕이 강물처럼 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">고요하고 깊게 마음에 스며들기를</u> 바라노라.”'
+    poemEasy: '“전하께서 말씀하시길,\n‘천년 도성의 예법과 위엄이 우뚝 서고 (🪨기품),\n그 은혜가 강물처럼 깊고 고요하게 퍼지길 (🌊여운) 바란다!’ 하셨다.\n👉 [🪨기품]과 [🌊여운]을 집중적으로 채워 어전을 빛내거라!”',
+    poemHard: '“전하께서 말씀하시길,\n‘천년 도성의 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">예법과 위엄이 흔들림 없이 우뚝 서고</u>,\n그 은혜가 강물처럼 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">깊고 아련하게 마음에 남기를</u> 바란다!’ 하셨다.\n👉 전하의 말씀 속에 담긴 두 가지 기운을 파악해 높이거라!”'
   },
   {
     id: 'shin_gi',
-    title: '〈호연지기(浩然之氣)의 노래〉',
+    title: '〈호연지기 : 조선을 깨우는 우레와 기개〉',
     focusStats: ['shin', 'gi'],
-    poemEasy: '“북방의 찬 바람에도 꺾이지 않는 조선의 당당한 기개를 떨치고 <span class="text-sky-300 font-sans text-[11px]">(🪨기품)</span>,\n우레와 같은 북소리로 도성의 잠든 피를 뜨겁게 깨우라 <span class="text-rose-300 font-sans text-[11px]">(🔥신명)</span>.”',
-    poemHard: '“북방의 찬 바람에도 꺾이지 않는 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">당당한 기개와 위엄을 떨치고</u>,\n우레와 같은 소리로 도성의 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">잠든 피를 뜨겁게 깨우라</u>.”'
+    poemEasy: '“전하께서 말씀하시길,\n‘찬 바람에도 꺾이지 않는 당당한 기품을 보이고 (🪨기품),\n우레 같은 북소리로 도성의 열기를 뜨겁게 깨우라 (🔥신명)!’ 하셨다.\n👉 [🔥신명]과 [🪨기품]을 든든히 채워 진격하거라!”',
+    poemHard: '“전하께서 말씀하시길,\n‘찬 바람에도 꺾이지 않는 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">묵직하고 당당한 위엄</u>을 보이고,\n우레 같은 소리로 도성의 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">잠든 피와 열기를 뜨겁게 깨우라</u>!’ 하셨다.\n👉 전하의 말씀 속에 담긴 두 가지 기운을 파악해 높이거라!”'
   },
   {
     id: 'hae_yeo',
-    title: '〈미행길 달빛의 노래〉',
+    title: '〈월하미행 : 달빛 아래 건네는 위로〉',
     focusStats: ['hae', 'yeo'],
-    poemEasy: '“구중궁궐을 벗어나 마주한 백성들의 고단한 한숨을 달빛으로 어루만지고 <span class="text-emerald-300 font-sans text-[11px]">(🌊여운)</span>,\n정겨운 익살과 웃음 한마디로 시름을 달래주고 싶구나 <span class="text-amber-300 font-sans text-[11px]">(🎭해학)</span>.”',
-    poemHard: '“구중궁궐을 벗어나 마주한 백성들의 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">한숨을 달빛으로 어루만지고</u>,\n정겨운 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">농담과 웃음 한마디로</u> 시름을 달래주고 싶구나.”'
+    poemEasy: '“전하께서 말씀하시길,\n‘고단한 백성들의 한숨을 아련한 달빛 가락으로 달래주고 (🌊여운),\n익살스러운 재치로 입가에 미소를 지어주자꾸나 (🎭해학)!’ 하셨다.\n👉 [🎭해학]과 [🌊여운]을 정성껏 끌어올리거라!”',
+    poemHard: '“전하께서 말씀하시길,\n‘고단한 백성들의 한숨을 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">서정적이고 깊은 가락</u>으로 어루만지고,\n정겨운 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">익살과 재치 한마디</u>로 시름을 잊게 해주자!’ 하셨다.\n👉 전하의 말씀 속에 담긴 두 가지 기운을 파악해 높이거라!”'
   },
   {
     id: 'shin_yeo',
-    title: '〈해원상생(解冤相生)의 노래〉',
+    title: '〈해원상생 : 눈물을 씻고 터뜨리는 환희〉',
     focusStats: ['shin', 'yeo'],
-    poemEasy: '“모진 가뭄을 견뎌낸 백성들의 맺힌 눈물을 구슬픈 가락으로 씻어내고 <span class="text-emerald-300 font-sans text-[11px]">(🌊여운)</span>,\n그 끝에 터져 나오는 폭발적인 환희로 하늘을 울려보세나 <span class="text-rose-300 font-sans text-[11px]">(🔥신명)</span>.”',
-    poemHard: '“모진 가뭄을 견뎌낸 백성들의 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">맺힌 눈물을 구슬픈 가락으로</u> 씻어내고,\n그 끝에 터져 나오는 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">뜨거운 환희와 열기로</u> 하늘을 울려보세나.”'
+    poemEasy: '“전하께서 말씀하시길,\n‘모진 가뭄을 견딘 백성들의 한을 깊은 소리로 풀어내고 (🌊여운),\n그 끝에 폭발하는 신명으로 하늘을 울려보자 (🔥신명)!’ 하셨다.\n👉 [🔥신명]과 [🌊여운]을 조화롭게 채워 올리거라!”',
+    poemHard: '“전하께서 말씀하시길,\n‘모진 가뭄을 견딘 백성들의 눈물을 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">애절하고 긴 울림</u>으로 씻어내고,\n그 끝에 터져 나오는 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">폭발적인 열기와 환희</u>로 하늘을 울려보자!’ 하셨다.\n👉 전하의 말씀 속에 담긴 두 가지 기운을 파악해 높이거라!”'
   },
   {
     id: 'gi_hae',
-    title: '〈파격풍류(破格風流)의 노래〉',
+    title: '〈파격풍류 : 격식 속에 숨긴 통쾌한 익살〉',
     focusStats: ['gi', 'hae'],
-    poemEasy: '“매일 반복되는 딱딱한 경연에 숨이 막히는구나. 선비의 바른 예법을 잃지 않으면서도 <span class="text-sky-300 font-sans text-[11px]">(🪨기품)</span>\n무릎을 탁 치게 만드는 기발한 재치 <span class="text-amber-300 font-sans text-[11px]">(🎭해학)</span>를 보여줄 자가 없느냐.”',
-    poemHard: '“매일 반복되는 딱딱한 경연에 숨이 막히는구나. <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">선비의 바른 예법과 격식</u>을 잃지 않으면서도\n무릎을 탁 치게 만드는 <u class="decoration-rose-400 decoration-2 underline-offset-4 text-amber-200">기발한 재치와 익살</u>을 보여줄 자가 없느냐.”'
+    poemEasy: '“전하께서 말씀하시길,\n‘답답한 궁중 예법 속에서도 선비의 기품을 잃지 않고 (🪨기품),\n무릎을 탁 치게 만드는 통쾌한 해학을 보여다오 (🎭해학)!’ 하셨다.\n👉 [🪨기품]과 [🎭해학]을 동시에 만족시켜 드리거라!”',
+    poemHard: '“전하께서 말씀하시길,\n‘답답한 경연 속에서도 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">선비의 반듯한 예법과 격식</u>을 지키면서,\n무릎을 탁 치게 만드는 <u class="decoration-red-600 decoration-2 underline-offset-4 text-[#9a3412]">기발한 재치와 웃음</u>을 보여줄 자 없느냐!’ 하셨다.\n👉 전하의 말씀 속에 담긴 두 가지 기운을 파악해 높이거라!”'
   }
 ];
 
-// 2) 상대 풍물패 4팀 (각 팀마다 고유한 스탯 자연감소 방해 공작 보유)
 const RIVAL_BANDS = [
   {
     name: '장악원 고집불통 정악단',
-    debuffDesc: '엄격한 궁중 예법의 압박으로 행진 중 [🔥신명]과 [🎭해학]이 더 빠르게 줄어드오!',
+    debuffDesc: '방해 공작: 깐깐한 격식 때문에 행진 중 [🔥신명]과 [🎭해학]이 더 빠르게 식어버리오!',
     drainPenalty: { shin: 0.9, gi: 0, hae: 0.9, yeo: 0 }
   },
   {
     name: '남사당 천둥벌거숭이패',
-    debuffDesc: '상대의 요란한 기세에 밀려 행진 중 [🪨기품]과 [🌊여운]이 더 빠르게 흩어지오!',
+    debuffDesc: '방해 공작: 상대의 소란스러운 기세에 밀려 [🪨기품]과 [🌊여운]이 더 빨리 흩어지오!',
     drainPenalty: { shin: 0, gi: 0.9, hae: 0, yeo: 0.9 }
   },
   {
     name: '도깨비 밤거리 야단패',
-    debuffDesc: '종잡을 수 없는 도깨비불 현혹으로 [🪨기품]과 [🎭해학] 유지가 까다롭소!',
+    debuffDesc: '방해 공작: 도깨비불 현혹술로 인해 [🪨기품]과 [🎭해학] 유지가 까다롭소!',
     drainPenalty: { shin: 0, gi: 0.85, hae: 0.85, yeo: 0 }
   },
   {
     name: '개화기 하이칼라 악단',
-    debuffDesc: '낯선 서양 나발 소리의 간섭으로 전통의 [🌊여운]과 [🔥신명]이 빠르게 빠져나가오!',
+    debuffDesc: '방해 공작: 서양 나발 소리의 간섭으로 전통의 [🌊여운]과 [🔥신명]이 빨리 빠져나가오!',
     drainPenalty: { shin: 0.85, gi: 0, hae: 0, yeo: 0.85 }
   }
 ];
 
-// 3) 8합(8라운드로 대폭 확장된) 짝쇠 메기고 받기 전통 풍물 채보
 const BATTLE_PATTERNS = [
   { title: '제1합 · 중모리 마당 열기', notes: [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0] },
   { title: '제2합 · 자진모리 길군악', notes: [1, 0, 0, 1, 0, 0, 1, 0, 2, 0, 0, 0] },
@@ -1603,12 +1702,13 @@ function getPlacedMarchers() {
 }
 
 // =========================================================================
-// === [CHAPTER 4: 실시간 스탯 충전/자연감소(저글링) 엔진 및 왕의 시가 연동] ===
+// === [CHAPTER 4: 실시간 스탯 저글링 엔진 · 페이지형 안내서 · 개발자 모드(10연타)] ===
 let currentDecree = ROYAL_DECREES[0];
+let howToCurrentPage = 0;
+let devClickCount = 0;
+let devClickTimer = null;
 
 function getDecreeTargets() {
-  // 왕의 시가에서 지정한 2개의 핵심 스탯은 높은 목표치(쉬움 68 / 어려움 80)를 요구하고,
-  // 나머지 보조 스탯도 최소 기본치(쉬움 36 / 어려움 46) 이상을 유지해야 함
   const mainTarget = difficulty === 'easy' ? 68 : 80;
   const subTarget = difficulty === 'easy' ? 36 : 46;
   const targets = { shin: subTarget, gi: subTarget, hae: subTarget, yeo: subTarget };
@@ -1618,13 +1718,11 @@ function getDecreeTargets() {
   return targets;
 }
 
-// 매초 변화량(순증감률)을 계산하여 실시간으로 스탯을 올리거나 떨어뜨리는 함수
 function computeStatNetRates() {
   const placed = getPlacedMarchers();
   const activeMarchers = placed.filter(m => !m.muted);
   const soloMarchers = activeMarchers.filter(m => m.solo);
 
-  // 기본 자연 감소율 (연주하지 않거나 방치하면 점점 줄어듦) + 상대 풍물패의 방해 공작 감소율
   const baseDecay = difficulty === 'easy' ? -1.25 : -1.75;
   const rates = {
     shin: baseDecay - (currentRival.drainPenalty?.shin || 0),
@@ -1635,24 +1733,21 @@ function computeStatNetRates() {
 
   if (activeMarchers.length === 0) return rates;
 
-  // 장단에 따른 지속 변화
   if (audio.mode === 'jungmori') {
     rates.gi += 0.85; rates.yeo += 0.85; rates.shin -= 0.35;
   } else {
     rates.shin += 0.95; rates.hae += 0.85; rates.gi -= 0.35;
   }
 
-  // 자리별 충전 가중치 (5번 선두 자리는 1.55배)
   const slotMultipliers = [0.85, 1.0, 1.15, 1.3, 1.55];
   const anySolo = soloMarchers.length > 0;
 
   slots.forEach((marcher, idx) => {
     if (!marcher || marcher.muted) return;
-    if (anySolo && !marcher.solo) return; // 솔로가 켜져 있으면 솔로 악기만 집중 충전됨!
+    if (anySolo && !marcher.solo) return;
 
     const s = marcher.inst.stats;
     const slotMult = slotMultipliers[idx];
-    // 솔로(S) 집중 숙성 시 충전 속도 2.1배 증폭 (대신 여러 개를 다 솔로로 켜면 분산됨)
     const soloBoost = anySolo ? (2.15 / Math.sqrt(soloMarchers.length)) : 0.95;
 
     ['shin', 'gi', 'hae', 'yeo'].forEach(k => {
@@ -1660,7 +1755,6 @@ function computeStatNetRates() {
       if (val > 0) {
         rates[k] += (val * 0.085) * slotMult * soloBoost;
       } else if (val < 0) {
-        // 상극 스탯 누수(Conflict): 이 악기가 켜져 있으면 반대 성향 스탯이 더 빨리 깎임
         rates[k] += (val * 0.11);
       }
     });
@@ -1730,17 +1824,111 @@ document.getElementById('cancelDiffBtn').addEventListener('click', () => {
   document.getElementById('titleMainButtons').classList.remove('hidden');
 });
 
+// [v4.1.2] 4페이지 분량 게임 방법 모달 페이지네이션 로직
+function updateHowToPageUI() {
+  const totalPages = 4;
+  document.getElementById('howToPageTitle').textContent = `📖 행렬 지휘 안내서 (${howToCurrentPage + 1} / ${totalPages})`;
+  for (let i = 0; i < totalPages; i++) {
+    const pageEl = document.getElementById(`howToPage_${i}`);
+    if (pageEl) {
+      if (i === howToCurrentPage) pageEl.classList.remove('hidden');
+      else pageEl.classList.add('hidden');
+    }
+  }
+  const dots = document.getElementById('howToDots').children;
+  for (let i = 0; i < dots.length; i++) {
+    dots[i].className = i === howToCurrentPage ? 'w-2.5 h-2.5 rounded-full bg-amber-300 transition-all' : 'w-2 h-2 rounded-full bg-slate-600 transition-all';
+  }
+  const prevBtn = document.getElementById('howToPrevBtn');
+  const nextBtn = document.getElementById('howToNextBtn');
+  prevBtn.style.visibility = howToCurrentPage === 0 ? 'hidden' : 'visible';
+  nextBtn.textContent = howToCurrentPage === totalPages - 1 ? '숙지 완료 ✓' : '다음 쪽 ▶';
+}
+
 document.getElementById('openHowToBtn').addEventListener('click', () => {
+  howToCurrentPage = 0;
+  updateHowToPageUI();
   document.getElementById('howToModal').classList.remove('hidden');
 });
 document.getElementById('closeHowToBtn').addEventListener('click', () => {
   document.getElementById('howToModal').classList.add('hidden');
 });
-document.getElementById('confirmHowToBtn').addEventListener('click', () => {
-  document.getElementById('howToModal').classList.add('hidden');
+document.getElementById('howToPrevBtn').addEventListener('click', () => {
+  if (howToCurrentPage > 0) {
+    howToCurrentPage--;
+    updateHowToPageUI();
+  }
+});
+document.getElementById('howToNextBtn').addEventListener('click', () => {
+  if (howToCurrentPage < 3) {
+    howToCurrentPage++;
+    updateHowToPageUI();
+  } else {
+    document.getElementById('howToModal').classList.add('hidden');
+  }
 });
 
-// 난이도 선택 시 먼저 '왕의 시가(어제시)' 교지 모달을 띄움
+// [v4.1.2] 우측 하단 버전(v4.1.2) 10번 연속 클릭 시 개발자 모드 진입 및 맞쇠 대결 즉시 스킵
+function activateDevModeAndSkipToBattle() {
+  document.getElementById('devModeBar').classList.remove('hidden');
+  document.getElementById('royalDecreeModal').classList.add('hidden');
+  document.getElementById('howToModal').classList.add('hidden');
+
+  if (!gameStarted) {
+    startGame('easy');
+  }
+
+  // 행렬이 비어있다면 반주를 위해 기본 5인 악공 자동 배치
+  if (getPlacedMarchers().length === 0) {
+    [0, 1, 3, 4, 6].forEach((instIdx, slotIdx) => {
+      slots[slotIdx] = { inst: PICKABLE_INSTRUMENTS[instIdx], muted: false, solo: false, motionScale: 0 };
+    });
+    if (!audio.isPlaying) startSequencer();
+  }
+
+  // 모든 스탯 99 만점 및 흥 100% 달성 후 즉시 광화문 맞쇠 대결 장면으로 스킵!
+  bandStats = { shin: 99, gi: 99, hae: 99, yeo: 99 };
+  heung = 100;
+  palaceGateX = viewWidth * 0.86;
+  recalculateBandStats();
+  updateHeungDisplay();
+  renderDock();
+  renderUnderfootControls();
+  startStatShowdown();
+}
+
+document.getElementById('versionBadge').addEventListener('click', (e) => {
+  e.stopPropagation();
+  devClickCount++;
+  if (devClickTimer) clearTimeout(devClickTimer);
+  devClickTimer = setTimeout(() => { devClickCount = 0; }, 3500);
+
+  if (devClickCount >= 10) {
+    devClickCount = 0;
+    activateDevModeAndSkipToBattle();
+  }
+});
+
+document.getElementById('devFillStatBtn').addEventListener('click', () => {
+  bandStats = { shin: 99, gi: 99, hae: 99, yeo: 99 };
+  recalculateBandStats();
+  updateNarrative(0, '🛠️ [개발자 모드] 모든 풍류 스탯을 99로 채웠소!');
+});
+
+document.getElementById('devSkipBattleBtn').addEventListener('click', () => {
+  activateDevModeAndSkipToBattle();
+});
+
+document.getElementById('devSkipEndingBtn').addEventListener('click', () => {
+  document.getElementById('battleGuideModal').classList.add('hidden');
+  document.getElementById('battleDeckContainer').classList.add('hidden');
+  document.getElementById('pickWindowContainer').classList.remove('hidden');
+  statMatchScore = 50;
+  battleState.battleScore = 48;
+  palaceGateX = viewWidth * 0.86;
+  triggerGourdBurstAndEnding();
+});
+
 document.getElementById('startEasyBtn').addEventListener('click', () => prepareDecreeAndRival('easy'));
 document.getElementById('startHardBtn').addEventListener('click', () => prepareDecreeAndRival('hard'));
 
@@ -1775,8 +1963,8 @@ function prepareDecreeAndRival(selectedDiff) {
 
   document.getElementById('decreeTitle').textContent = currentDecree.title;
   document.getElementById('decreePoemText').innerHTML = selectedDiff === 'easy' ? currentDecree.poemEasy : currentDecree.poemHard;
-  document.getElementById('decreeRivalName').textContent = `⚔️ 맞상대 풍물패: ${currentRival.name}`;
-  document.getElementById('decreeRivalDebuff').textContent = `· 방해 공작: ${currentRival.debuffDesc}`;
+  document.getElementById('decreeRivalName').textContent = `⚔️ 오늘 맞붙을 라이벌: ${currentRival.name}`;
+  document.getElementById('decreeRivalDebuff').textContent = `· ${currentRival.debuffDesc}`;
 
   document.getElementById('titleOverlay').classList.add('hidden-screen');
   document.getElementById('royalDecreeModal').classList.remove('hidden');
@@ -1795,12 +1983,11 @@ function startGame(selectedDiff) {
   enterGateOffsetX = 0;
   gateDoorOpenProgress = 0;
   confetti = [];
-  // 초기 스탯은 낮게(16) 시작하여 플레이어가 직접 연주·솔로·스왑으로 끌어올려야 함
   bandStats = { shin: 16, gi: 16, hae: 16, yeo: 16 };
   clearInteractionStates();
 
-  document.getElementById('rivalNameBadge').textContent = `상대: ${currentRival.name}`;
-  document.getElementById('rivalTraitText').textContent = `· 어제시: ${currentDecree.title} (솔로[S]와 5번 자리로 목표 스탯을 채우고 유지하시오!)`;
+  document.getElementById('rivalNameBadge').textContent = `라이벌: ${currentRival.name}`;
+  document.getElementById('rivalTraitText').textContent = `· 전하의 심기: ${currentDecree.title} (캐릭터 몸체를 눌러 자리를 바꾸고 스탯을 맞추시오!)`;
 
   document.getElementById('pickWindowContainer').classList.remove('hidden');
   document.getElementById('battleDeckContainer').classList.add('hidden');
@@ -1825,12 +2012,11 @@ function startGame(selectedDiff) {
 
   recalculateBandStats();
   updateHeungDisplay();
-  updateNarrative(0, `${currentDecree.title}의 심기에 맞춰 스탯을 채우시오! 연주하지 않으면 스탯이 서서히 줄어드오!`);
+  updateNarrative(0, `조선힙스터 출정이오! 전하의 심기에 맞춰 목표 스탯을 채우고 광화문으로 행진하시오!`);
   renderDock();
   renderUnderfootControls();
 }
 
-// 매초 타이머 및 실시간 스탯 충전·자연감소(저글링) 틱
 setInterval(() => {
   if (!gameStarted || finaleState === 'ended' || finaleState === 'entering_gate') return;
 
@@ -1931,13 +2117,14 @@ function evaluateMeasureHeung() {
   }
 
   let baseGain = 0.72 + (effective.length * 0.1) + (metCount * 0.12);
-  addHeung(baseGain, `어제시 목표 스탯(${metCount}/4 달성 중)을 유지하며 광화문으로 행진 중이오!`);
+  addHeung(baseGain, `전하의 심기 목표 스탯(${metCount}/4 달성 중)을 조율하며 광화문으로 행진 중이오!`);
 }
 
-// === [CHAPTER 5: 스탯 기싸움 판정 및 8합 꽹과리 짝쇠 대결 로직] ===
+// === [CHAPTER 5: 맞쇠 대결 사전 설명창 연동 · 넉넉한 퀀타이즈 & 오답 감점제] ===
 function startStatShowdown() {
   finaleState = 'stat_showdown';
   recalculateBandStats();
+  renderDock();
   renderUnderfootControls();
 
   const targets = getDecreeTargets();
@@ -1952,32 +2139,39 @@ function startStatShowdown() {
     totalWeight += weight;
   });
 
-  statMatchScore = Math.min(50, Math.round((weightedSum / totalWeight) * 47));
+  statMatchScore = Math.min(50, Math.round((weightedSum / totalWeight) * 48));
 
+  // [v4.1.2] 쉬움 모드나 스탯 우세 시 퀀타이즈 허용 오차를 2단계(전후 1~2소박 여유)로 넓혀 훨씬 맞추기 쉽게 개선
   let buffText = '';
-  if (statMatchScore >= 40) {
-    battleState.quantizeTolerance = 1;
-    buffText = '어제시 부합 압승! 성상의 윤허로 짝쇠 8합 대결의 박자 보정이 넓어지오!';
-  } else if (statMatchScore >= 28) {
-    battleState.quantizeTolerance = 1;
-    buffText = '기싸움 호각세! 8합의 꽹과리 짝쇠 대결에서 진검승부를 가리시오!';
+  if (statMatchScore >= 38 || difficulty === 'easy') {
+    battleState.quantizeTolerance = 2;
+    buffText = `전하의 심기 부합(${statMatchScore}/50점)! 짝쇠 대결의 박자 보정이 대폭 넓어지오!`;
   } else {
-    battleState.quantizeTolerance = 0;
-    buffText = '어제시 스탯 미달! 상대의 기세가 매서우니 정박으로 꽹과리를 받아치시오!';
+    battleState.quantizeTolerance = 1;
+    buffText = `스탯 심사(${statMatchScore}/50점)! 8합 꽹과리 맞쇠 대결에서 역전을 노리시오!`;
   }
 
   const notice = document.getElementById('finaleStepNotice');
   const mainTitle = document.getElementById('finaleMainTitle');
   const subNotice = document.getElementById('finaleSubNotice');
   notice.classList.remove('hidden');
-  mainTitle.textContent = `⚔️ [${currentDecree.title}] 심사: ${statMatchScore} / 50점!`;
+  mainTitle.textContent = `⚔️ 전하의 심기 심사: ${statMatchScore} / 50점!`;
   subNotice.textContent = buffText;
-  updateNarrative(0, `[스탯 심사 ${statMatchScore}/50점] ${buffText}`);
+  updateNarrative(0, buffText);
 
+  // 대결 시작 전 조작법 설명 모달(battleGuideModal) 오픈
+  document.getElementById('battleGuideStatSummary').textContent = `스탯 기싸움 결과: ${statMatchScore} / 50점 · (PC: 스페이스바 / 모바일: 패드 터치)`;
   setTimeout(() => {
-    startKkwaengBattle();
-  }, 3000);
+    if (finaleState === 'stat_showdown') {
+      document.getElementById('battleGuideModal').classList.remove('hidden');
+    }
+  }, 1400);
 }
+
+document.getElementById('startBattleConfirmBtn').addEventListener('click', () => {
+  document.getElementById('battleGuideModal').classList.add('hidden');
+  startKkwaengBattle();
+});
 
 function startKkwaengBattle() {
   finaleState = 'kkwaeng_battle';
@@ -1988,6 +2182,7 @@ function startKkwaengBattle() {
   battleState.playerHits = {};
   battleState.totalHitsNeeded = BATTLE_PATTERNS.reduce((acc, p) => acc + p.notes.filter(n => n > 0).length, 0);
   battleState.successfulHits = 0;
+  battleState.rawScore = 0;
   battleState.battleScore = 0;
 
   document.getElementById('pickWindowContainer').classList.add('hidden');
@@ -2006,14 +2201,14 @@ function updateBattleDeckUI() {
   const totalRounds = BATTLE_PATTERNS.length;
 
   if (battleState.turn === 'rival') {
-    turnBadge.textContent = `[${battleState.roundIdx + 1}/${totalRounds}합] ${pattern.title} · 상대가 메기는 중 (경청!)`;
+    turnBadge.textContent = `[${battleState.roundIdx + 1}/${totalRounds}합] ${pattern.title} · 상대가 메기는 중 (잘 들으시오!)`;
     turnBadge.className = 'px-2 py-0.5 rounded bg-amber-300 text-slate-950 font-bold';
   } else {
-    turnBadge.textContent = `[${battleState.roundIdx + 1}/${totalRounds}합] ${pattern.title} · 지금 꽹과리로 받으시오!`;
+    turnBadge.textContent = `[${battleState.roundIdx + 1}/${totalRounds}합] ${pattern.title} · 지금 꽹과리(스페이스바/터치)로 받으시오!`;
     turnBadge.className = 'px-2 py-0.5 rounded bg-emerald-400 text-slate-950 font-bold animate-pulse';
   }
 
-  scoreLive.textContent = `기싸움: ${statMatchScore}점 | 짝쇠(${battleState.roundIdx + 1}/${totalRounds}합): ${battleState.battleScore}점`;
+  scoreLive.textContent = `기싸움: ${statMatchScore}점 | 맞쇠(${battleState.roundIdx + 1}/${totalRounds}합): ${battleState.battleScore}점`;
 
   const barEl = document.getElementById('rhythmStepBar');
   barEl.innerHTML = '';
@@ -2063,41 +2258,51 @@ function handlePlayerKkwaengStrike(isOpenTone = true) {
   const elapsedSinceStep = performance.now() - audio.lastStepTimeMs;
   const ratio = elapsedSinceStep / audio.stepInterval;
   let quantizedStep = battleState.stepInBar;
-  if (ratio > 0.55 && quantizedStep < 11) {
+  if (ratio > 0.45 && quantizedStep < 11) {
     quantizedStep = quantizedStep + 1;
   }
 
+  // 상대 턴 막바지(9~11스텝)에 첫 박을 노리고 조금 일찍 친 경우 후공 0번 스텝으로 관대하게 인정
   if (battleState.turn === 'rival') {
-    if (battleState.stepInBar >= 10 && pattern.notes[0] > 0 && !battleState.playerHits[0]) {
+    if (battleState.stepInBar >= 9 && pattern.notes[0] > 0 && !battleState.playerHits[0]) {
       quantizedStep = 0;
     } else {
-      judgeEl.textContent = '아직 상대가 메기는 차례요! 듣고 기다리시오!';
+      judgeEl.textContent = '⏳ 상대가 메기는 차례요! 듣고 기다리시오!';
       judgeEl.className = 'text-xs sm:text-sm font-bold text-amber-300 h-4';
       return;
     }
   }
 
+  // [v4.1.2] 넉넉한 퀀타이즈 탐색 (정박 -> ±1소박 -> 여유 버프 시 ±2소박까지 보정)
   let matchedStep = -1;
-  if (pattern.notes[quantizedStep] > 0 && battleState.playerHits[quantizedStep] !== 'good') {
-    matchedStep = quantizedStep;
-  } else if (battleState.quantizeTolerance >= 1) {
-    if (quantizedStep > 0 && pattern.notes[quantizedStep - 1] > 0 && battleState.playerHits[quantizedStep - 1] !== 'good') {
-      matchedStep = quantizedStep - 1;
-    } else if (quantizedStep < 11 && pattern.notes[quantizedStep + 1] > 0 && battleState.playerHits[quantizedStep + 1] !== 'good') {
-      matchedStep = quantizedStep + 1;
+  const searchOffsets = battleState.quantizeTolerance >= 2 ? [0, -1, 1, -2, 2] : [0, -1, 1];
+  for (const offset of searchOffsets) {
+    const candidate = quantizedStep + offset;
+    if (candidate >= 0 && candidate <= 11 && pattern.notes[candidate] > 0 && battleState.playerHits[candidate] !== 'good') {
+      matchedStep = candidate;
+      break;
     }
   }
+
+  const pointPerHit = 54 / Math.max(1, battleState.totalHitsNeeded);
+  const missPenalty = difficulty === 'easy' ? 3.2 : 4.5;
 
   if (matchedStep !== -1) {
     battleState.playerHits[matchedStep] = 'good';
     battleState.successfulHits++;
-    battleState.battleScore = Math.min(50, Math.round((battleState.successfulHits / Math.max(1, battleState.totalHitsNeeded)) * 50));
+    battleState.rawScore = Math.min(50, (battleState.rawScore || 0) + pointPerHit);
+    battleState.battleScore = Math.max(0, Math.min(50, Math.round(battleState.rawScore)));
+
     judgeEl.textContent = matchedStep === quantizedStep ? '⚡ 절묘하도다! (정박 명중!)' : '✨ 좋구나! (박자 보정 명중!)';
     judgeEl.className = 'text-xs sm:text-sm font-bold text-emerald-300 h-4';
     spawnConfettiBatch(6, heroX, 220);
   } else {
+    // 오답 타격 시 점수가 큰 폭으로 깎임 (무작정 연타 방지)
     battleState.playerHits[quantizedStep] = 'miss';
-    judgeEl.textContent = '💥 엇나갔소! 상대의 가락에 집중하시오!';
+    battleState.rawScore = Math.max(0, (battleState.rawScore || 0) - missPenalty);
+    battleState.battleScore = Math.max(0, Math.min(50, Math.round(battleState.rawScore)));
+
+    judgeEl.textContent = `💥 박자 이탈! (-${Math.round(missPenalty)}점 감점!)`;
     judgeEl.className = 'text-xs sm:text-sm font-bold text-rose-400 h-4';
   }
 
@@ -2120,6 +2325,39 @@ window.addEventListener('keydown', (e) => {
     handlePlayerKkwaengStrike(true);
   }
 });
+
+// [v4.1.2] 캐릭터 이동 선택 통합 함수 (발밑 ↔ 버튼 및 캐릭터 몸체 클릭 공통 사용)
+function selectOrSwapCharacterAtSlot(idx) {
+  audio.init();
+  pendingInst = null;
+  pendingEmptySlot = null;
+  const marcher = slots[idx];
+
+  if (swapSourceIndex === null) {
+    if (!marcher) return;
+    swapSourceIndex = idx;
+    updateNarrative(0, `[${idx + 1}번 자리: ${marcher.inst.shortName}] 선택됨! 아래 픽창에 불이 켜졌소. 옮길 다른 자리나 악공을 누르시오.`);
+  } else if (swapSourceIndex === idx) {
+    swapSourceIndex = null;
+    updateNarrative(0, `${marcher ? marcher.inst.shortName : ''} 자리 이동 선택을 거두었소.`);
+  } else {
+    const firstIdx = swapSourceIndex;
+    const secondIdx = idx;
+    const firstName = slots[firstIdx].inst.shortName;
+    const secondName = slots[secondIdx] ? slots[secondIdx].inst.shortName : '빈자리';
+
+    const temp = slots[firstIdx];
+    slots[firstIdx] = slots[secondIdx];
+    slots[secondIdx] = temp;
+
+    swapSourceIndex = null;
+    stats.swapAndChangeCount++;
+    recalculateBandStats();
+    addHeung(0.35, `${firstName} ↔ ${secondName} 자리 변경 완료! [${SLOT_STYLE_NAMES[secondIdx]}] 연주가 펼쳐지오!`);
+  }
+  renderDock();
+  renderUnderfootControls();
+}
 
 function renderUnderfootControls() {
   const layer = document.getElementById('underfootLayer');
@@ -2174,7 +2412,7 @@ function renderUnderfootControls() {
       if (marcher.solo) {
         marcher.muted = false;
         soloStreak = 0;
-        addHeung(0.3, `${marcher.inst.shortName} 집중 독주(Solo)! 이 악기의 주력 스탯이 2배 이상 빠르게 충전되오!`);
+        addHeung(0.3, `${marcher.inst.shortName} 집중 독주(Solo)! 주력 스탯이 2배 이상 빠르게 차오르오!`);
       } else {
         updateNarrative(0, `${marcher.inst.shortName} 독주를 풀고 전체 합주로 전환하오.`);
       }
@@ -2200,37 +2438,11 @@ function renderUnderfootControls() {
 
     const swapBtn = document.createElement('button');
     swapBtn.className = `foot-btn ${isSwapping ? 'active-swap' : ''}`;
-    swapBtn.title = `위치 변경`;
+    swapBtn.title = `위치 변경 (몸체 클릭도 가능)`;
     swapBtn.textContent = '↔';
     swapBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      audio.init();
-      pendingInst = null;
-      pendingEmptySlot = null;
-
-      if (swapSourceIndex === null) {
-        swapSourceIndex = idx;
-        updateNarrative(0, `${marcher.inst.shortName} 선택됨. 5번(선두) 자리에 두면 스탯 충전 속도가 1.55배가 되오!`);
-      } else if (swapSourceIndex === idx) {
-        swapSourceIndex = null;
-        updateNarrative(0, `${marcher.inst.shortName} 자리 이동 취소.`);
-      } else {
-        const firstIdx = swapSourceIndex;
-        const secondIdx = idx;
-        const firstName = slots[firstIdx].inst.shortName;
-        const secondName = slots[secondIdx].inst.shortName;
-
-        const temp = slots[firstIdx];
-        slots[firstIdx] = slots[secondIdx];
-        slots[secondIdx] = temp;
-
-        swapSourceIndex = null;
-        stats.swapAndChangeCount++;
-        recalculateBandStats();
-        addHeung(0.35, `${firstName}·${secondName} 자리 맞교환! 스탯 충전 속도와 연주 호흡이 바뀌었소!`);
-      }
-      renderDock();
-      renderUnderfootControls();
+      selectOrSwapCharacterAtSlot(idx);
     });
 
     wrap.appendChild(sBtn);
@@ -2249,16 +2461,7 @@ function onEmptySlotClicked(slotIdx) {
   }
 
   if (swapSourceIndex !== null) {
-    const fromIdx = swapSourceIndex;
-    const movingMarcher = slots[fromIdx];
-    slots[slotIdx] = movingMarcher;
-    slots[fromIdx] = null;
-    swapSourceIndex = null;
-    stats.swapAndChangeCount++;
-    recalculateBandStats();
-    addHeung(0.3, `${movingMarcher.inst.shortName} 악공이 [${SLOT_STYLE_NAMES[slotIdx]}] 자리로 이동하였소!`);
-    renderDock();
-    renderUnderfootControls();
+    selectOrSwapCharacterAtSlot(slotIdx);
     return;
   }
 
@@ -2294,20 +2497,26 @@ function placeInstrumentAtSlot(inst, slotIdx) {
   renderUnderfootControls();
 }
 
+// [v4.1.2] 행렬 위의 캐릭터 몸체를 클릭(이동 선택)했을 때 해당 픽창 카드도 함께 깜빡이도록 연동!
 function renderDock() {
   const grid = document.getElementById('instrumentGrid');
   grid.innerHTML = '';
 
   PICKABLE_INSTRUMENTS.forEach(inst => {
-    const inParade = slots.some(m => m && m.inst.id === inst.id);
+    const slotIdx = slots.findIndex(m => m && m.inst.id === inst.id);
+    const inParade = slotIdx !== -1;
     const isPendingThis = pendingInst && pendingInst.id === inst.id;
     const isBlinkForEmptySlot = (pendingEmptySlot !== null && !inParade);
+    const isSelectedOnStage = (swapSourceIndex !== null && slots[swapSourceIndex] && slots[swapSourceIndex].inst.id === inst.id);
+
+    const shouldBlink = isPendingThis || isBlinkForEmptySlot || isSelectedOnStage;
+    const posBadge = inParade ? `<span class="text-[8px] px-1 rounded bg-amber-300 text-slate-950 font-bold ml-0.5">${slotIdx + 1}번</span>` : '';
 
     const card = document.createElement('div');
-    card.className = `inst-card ${inParade ? 'active' : ''} ${(isPendingThis || isBlinkForEmptySlot) ? 'blink-card' : ''}`;
+    card.className = `inst-card ${inParade ? 'active' : ''} ${shouldBlink ? 'blink-card' : ''}`;
     card.innerHTML = `
       <div class="text-base sm:text-xl leading-none mb-0.5">${inst.icon}</div>
-      <div class="text-[10px] sm:text-[11px] font-semibold text-white leading-tight">${inst.name}</div>
+      <div class="text-[10px] sm:text-[11px] font-semibold text-white leading-tight flex items-center justify-center">${inst.name}${posBadge}</div>
       <div class="text-[9px] text-amber-300 mt-0.5"><em>"${inst.gueum[0]} ${inst.gueum[1]}"</em></div>
       <div class="text-[8px] sm:text-[9px] text-slate-300 mt-0.5 bg-slate-900/80 px-1 rounded">${inst.statTag}</div>
     `;
@@ -2358,6 +2567,7 @@ function onInstrumentCardClicked(inst) {
   renderUnderfootControls();
 }
 
+// [v4.1.2] 캔버스 위의 캐릭터 몸체를 클릭하면 즉시 이동(↔) 버튼처럼 선택되고 픽창에 불이 깜빡임!
 canvas.addEventListener('click', (e) => {
   if (finaleState !== 'marching' && finaleState !== 'infinite') return;
   const rect = canvas.getBoundingClientRect();
@@ -2369,22 +2579,11 @@ canvas.addEventListener('click', (e) => {
   const hitWidth = (viewWidth / 5) * 0.48;
   for (let i = 0; i < 5; i++) {
     const pos = getSlotScreenPos(i);
-    if (Math.abs(cx - pos.x) < hitWidth && cy > pos.y - 135 && cy < pos.y + 45) {
+    if (Math.abs(cx - pos.x) < hitWidth && cy > pos.y - 140 && cy < pos.y + 40) {
       if (slots[i] === null) {
         onEmptySlotClicked(i);
-      } else if (swapSourceIndex !== null && swapSourceIndex !== i) {
-        const firstIdx = swapSourceIndex;
-        const firstName = slots[firstIdx].inst.shortName;
-        const secondName = slots[i].inst.shortName;
-        const temp = slots[firstIdx];
-        slots[firstIdx] = slots[i];
-        slots[i] = temp;
-        swapSourceIndex = null;
-        stats.swapAndChangeCount++;
-        recalculateBandStats();
-        addHeung(0.35, `${firstName}·${secondName} 악공이 자리를 맞바꾸었소!`);
-        renderDock();
-        renderUnderfootControls();
+      } else {
+        selectOrSwapCharacterAtSlot(i);
       }
       break;
     }
@@ -2403,80 +2602,95 @@ function stopSequencer() {
   audio.timer = null;
 }
 
-// === [CHAPTER 6: 1~5번 자리별 정갈한 리듬 엔진 (밀도 1 -> 1.5 -> 2 -> 2.5 -> 최대 3)] ===
+// === [CHAPTER 6: 1~5번 자리별 연주 밀도(1.5 ~ 4.0) 및 전 조합 황금 그루브 동기화 엔진] ===
+// * 모든 악기가 국악 3소박의 황금 그루브 축(대박: 0, 3, 6, 9 / 셔플 엇박: 2, 5, 8, 11)과
+//   D 단조 펜타토닉(D, F, G, A, C) 화음 위에서만 맞물려 어떤 5인 조합도 불협화음이나 박자 꼬임이 없도록 설계
 function triggerInstrumentBySlotStyle(id, idx, s12, s24, isSecondBar, dest) {
   let triggered = false;
 
   if (id === 'buk') {
     if (idx === 0) {
-      // 밀도 1.0: 한 마디 첫 박 기둥
-      if (s12 === 0) { audio.playBuk(dest, true); triggered = true; }
+      // 밀도 1.5: 1박 강박 + 3박 받침 + 둘째마디 4박 리드
+      if (s12 === 0 || s12 === 6 || (isSecondBar && s12 === 9)) { audio.playBuk(dest, s12 === 0); triggered = true; }
     } else if (idx === 1) {
-      // 밀도 1.5: 정박 1, 3박
-      if (s12 === 0 || s12 === 6) { audio.playBuk(dest, s12 === 0); triggered = true; }
-    } else if (idx === 2) {
-      // 밀도 2.0: 1, 3, 4박 안정적 걸음
+      // 밀도 2.0: 1, 3, 4박 정박 행진
       if (s12 === 0 || s12 === 6 || s12 === 9) { audio.playBuk(dest, s12 === 0); triggered = true; }
+    } else if (idx === 2) {
+      // 밀도 2.6: 2마디 문답 (첫 마디 정박 + 둘째 마디 덩-쿵-더러러)
+      if (!isSecondBar && (s12 === 0 || s12 === 6 || s12 === 9)) { audio.playBuk(dest, s12 === 0); triggered = true; }
+      else if (isSecondBar && (s12 === 0 || s12 === 3 || s12 === 6 || s12 === 9 || s12 === 11)) { audio.playBuk(dest, s12 === 0 || s12 === 6); triggered = true; }
     } else if (idx === 3) {
-      // 밀도 2.5: 미묘한 엇박(5소박) 포인트
-      if (s12 === 0 || s12 === 5 || s12 === 9) { audio.playBuk(dest, s12 === 0); triggered = true; }
+      // 밀도 3.3: 찰진 셔플 엇박(5, 8, 11소박) 바운스
+      if (s12 === 0 || s12 === 5 || s12 === 6 || s12 === 9 || s12 === 11) { audio.playBuk(dest, s12 === 0 || s12 === 6); triggered = true; }
     } else {
-      // 밀도 3.0(최대): 2마디 순환 정갈한 문답 (첫 마디 2박, 둘째 마디 4박)
-      if (!isSecondBar && (s12 === 0 || s12 === 6)) { audio.playBuk(dest, s12 === 0); triggered = true; }
-      else if (isSecondBar && (s12 === 0 || s12 === 4 || s12 === 8 || s12 === 10)) { audio.playBuk(dest, s12 === 0); triggered = true; }
+      // 밀도 4.0(선두 대장): 대박 기둥 + 후반부 호쾌한 북 난타 필인
+      if (s12 === 0 || s12 === 2 || s12 === 6 || s12 === 8 || s12 === 9 || (isSecondBar && s12 === 11)) {
+        audio.playBuk(dest, s12 === 0 || s12 === 6); triggered = true;
+      }
     }
   }
 
   else if (id === 'janggu') {
     if (idx === 0) {
-      if (s12 === 0) { audio.playJanggu(dest, 'deong'); triggered = true; }
-      else if (s12 === 6) { audio.playJanggu(dest, 'kung'); triggered = true; }
-    } else if (idx === 1) {
+      // 밀도 1.5: 덩 - - 쿵 - 기덕
       if (s12 === 0) { audio.playJanggu(dest, 'deong'); triggered = true; }
       else if (s12 === 6) { audio.playJanggu(dest, 'kung'); triggered = true; }
       else if (s12 === 9) { audio.playJanggu(dest, 'ki'); triggered = true; }
-    } else if (idx === 2) {
+    } else if (idx === 1) {
+      // 밀도 2.0: 덩 - 기덕 쿵 - 기덕
       if (s12 === 0) { audio.playJanggu(dest, 'deong'); triggered = true; }
-      else if (s12 === 3 || s12 === 9) { audio.playJanggu(dest, 'ki'); triggered = true; }
+      else if (s12 === 3 || s12 === 9) { audio.playJanggu(dest, 'kiduk'); triggered = true; }
       else if (s12 === 6) { audio.playJanggu(dest, 'kung'); triggered = true; }
+    } else if (idx === 2) {
+      // 밀도 2.6: 2마디 순환 덩기덕쿵더러러
+      if (s12 === 0) { audio.playJanggu(dest, 'deong'); triggered = true; }
+      else if (s12 === 2 || s12 === 8) { audio.playJanggu(dest, 'ki'); triggered = true; }
+      else if (s12 === 6) { audio.playJanggu(dest, 'kung'); triggered = true; }
+      else if (isSecondBar && (s12 === 9 || s12 === 11)) { audio.playJanggu(dest, 'kiduk'); triggered = true; }
     } else if (idx === 3) {
+      // 밀도 3.3: 엇박 채편과 궁편의 교차 그루브
       if (s12 === 0) { audio.playJanggu(dest, 'deong'); triggered = true; }
-      else if (s12 === 5) { audio.playJanggu(dest, 'kung'); triggered = true; }
-      else if (s12 === 8 || s12 === 11) { audio.playJanggu(dest, 'kiduk'); triggered = true; }
+      else if (s12 === 2 || s12 === 8 || s12 === 11) { audio.playJanggu(dest, 'kiduk'); triggered = true; }
+      else if (s12 === 3 || s12 === 6) { audio.playJanggu(dest, 'kung'); triggered = true; }
     } else {
-      // 밀도 3.0: 기존 3번 자리 수준의 깔끔한 2마디 덩기덕
-      if (s12 === 0) { audio.playJanggu(dest, 'deong'); triggered = true; }
-      else if (!isSecondBar && (s12 === 3 || s12 === 6)) { audio.playJanggu(dest, s12 === 3 ? 'kiduk' : 'kung'); triggered = true; }
-      else if (isSecondBar && (s12 === 3 || s12 === 6 || s12 === 9)) {
-        audio.playJanggu(dest, s12 === 6 ? 'kung' : 'kiduk'); triggered = true;
-      }
+      // 밀도 4.0(선두 대장): 화려한 설장구 꽃가락 (박자 축을 흔들지 않고 정교하게 쪼갬)
+      if (s12 === 0 || (isSecondBar && s12 === 6)) { audio.playJanggu(dest, 'deong'); triggered = true; }
+      else if (s12 === 2 || s12 === 5 || s12 === 8 || s12 === 11) { audio.playJanggu(dest, 'kiduk'); triggered = true; }
+      else if (s12 === 3 || s12 === 6 || s12 === 9) { audio.playJanggu(dest, 'kung'); triggered = true; }
     }
   }
 
   else if (id === 'jing') {
+    // 징은 긴 서스테인 특성상 대박(0, 6, 9)에 웅장하게 울려 전체 화성 바닥을 잡아줌
     if (idx === 0) {
-      if (s24 === 0) { audio.playJing(dest, true); triggered = true; }
-    } else if (idx === 1) {
       if (s12 === 0) { audio.playJing(dest, true); triggered = true; }
-    } else if (idx === 2) {
-      if (s24 === 0 || s24 === 12) { audio.playJing(dest, s24 === 0); triggered = true; }
-    } else if (idx === 3) {
-      if (s24 === 0 || s24 === 18) { audio.playJing(dest, s24 === 0); triggered = true; }
-    } else {
+    } else if (idx === 1) {
       if (s24 === 0 || s24 === 12 || s24 === 18) { audio.playJing(dest, s24 !== 18); triggered = true; }
+    } else if (idx === 2) {
+      if (s12 === 0 || s12 === 6) { audio.playJing(dest, s12 === 0); triggered = true; }
+    } else if (idx === 3) {
+      if (s12 === 0 || s12 === 6 || (isSecondBar && s12 === 9)) { audio.playJing(dest, s12 === 0); triggered = true; }
+    } else {
+      if (s12 === 0 || s12 === 3 || s12 === 6 || (isSecondBar && s12 === 9)) { audio.playJing(dest, s12 === 0 || s12 === 6); triggered = true; }
     }
   }
 
   else if (id === 'gayageum') {
     const patterns = [
-      [{ step: 0, f: SCALE.D3, nh: true }, { step: 6, f: SCALE.A3, nh: false }],
+      // idx 0 (밀도 1.5): 3음 베이스 리프
       [{ step: 0, f: SCALE.D3, nh: true }, { step: 6, f: SCALE.A3, nh: false }, { step: 9, f: SCALE.G3, nh: true }],
+      // idx 1 (밀도 2.0): 4음 정박 산조
       [{ step: 0, f: SCALE.D4, nh: false }, { step: 3, f: SCALE.F4, nh: true }, { step: 6, f: SCALE.G4, nh: false }, { step: 9, f: SCALE.A4, nh: true }],
-      [{ step: 0, f: SCALE.D4, nh: true }, { step: 4, f: SCALE.G4, nh: false }, { step: 7, f: SCALE.A4, nh: true }, { step: 10, f: SCALE.C5, nh: false }],
-      // 밀도 3.0(최대): 2마디 순환 산조 (마디당 4음으로 절제)
+      // idx 2 (밀도 2.6): 5음 2마디 문답 산조
       !isSecondBar
-        ? [{ step: 0, f: SCALE.D4, nh: false }, { step: 3, f: SCALE.F4, nh: false }, { step: 6, f: SCALE.A4, nh: true }, { step: 9, f: SCALE.C5, nh: false }]
-        : [{ step: 0, f: SCALE.D5, nh: true }, { step: 3, f: SCALE.A4, nh: false }, { step: 6, f: SCALE.G4, nh: true }, { step: 9, f: SCALE.D4, nh: false }]
+        ? [{ step: 0, f: SCALE.D4, nh: false }, { step: 2, f: SCALE.F4, nh: false }, { step: 3, f: SCALE.G4, nh: true }, { step: 6, f: SCALE.A4, nh: false }, { step: 9, f: SCALE.C5, nh: true }]
+        : [{ step: 0, f: SCALE.D5, nh: true }, { step: 3, f: SCALE.C5, nh: false }, { step: 6, f: SCALE.A4, nh: true }, { step: 8, f: SCALE.G4, nh: false }, { step: 9, f: SCALE.D4, nh: true }],
+      // idx 3 (밀도 3.3): 6음 덩기덕 셔플 농현
+      [{ step: 0, f: SCALE.D4, nh: false }, { step: 2, f: SCALE.F4, nh: false }, { step: 3, f: SCALE.G4, nh: true }, { step: 6, f: SCALE.A4, nh: false }, { step: 8, f: SCALE.C5, nh: false }, { step: 9, f: SCALE.A4, nh: true }],
+      // idx 4 (밀도 4.0): 7~8음 선두 대장 병창 산조 (정박+셔플 그리드에 완전 밀착)
+      !isSecondBar
+        ? [{ step: 0, f: SCALE.D4, nh: false }, { step: 2, f: SCALE.F4, nh: false }, { step: 3, f: SCALE.G4, nh: true }, { step: 5, f: SCALE.A4, nh: false }, { step: 6, f: SCALE.C5, nh: false }, { step: 8, f: SCALE.D5, nh: true }, { step: 9, f: SCALE.A4, nh: false }]
+        : [{ step: 0, f: SCALE.D5, nh: true }, { step: 2, f: SCALE.C5, nh: false }, { step: 3, f: SCALE.A4, nh: false }, { step: 6, f: SCALE.G4, nh: true }, { step: 8, f: SCALE.F4, nh: false }, { step: 9, f: SCALE.G4, nh: false }, { step: 11, f: SCALE.D4, nh: true }]
     ];
     const hit = patterns[idx].find(n => n.step === s12);
     if (hit) { audio.playGayageum(dest, hit.f, hit.nh); triggered = true; }
@@ -2484,90 +2698,111 @@ function triggerInstrumentBySlotStyle(id, idx, s12, s24, isSecondBar, dest) {
 
   else if (id === 'haegeum') {
     if (idx === 0) {
-      if (s12 === 0) { audio.playHaegeum(dest, SCALE.D4, SCALE.F4, 0.48); triggered = true; }
-    } else if (idx === 1) {
       if (s12 === 0) { audio.playHaegeum(dest, SCALE.D4, SCALE.F4, 0.45); triggered = true; }
       else if (s12 === 6) { audio.playHaegeum(dest, SCALE.G4, SCALE.D4, 0.45); triggered = true; }
-    } else if (idx === 2) {
+    } else if (idx === 1) {
       if (s12 === 0) { audio.playHaegeum(dest, SCALE.A4, SCALE.C5, 0.4); triggered = true; }
       else if (s12 === 6) { audio.playHaegeum(dest, SCALE.F4, SCALE.G4, 0.4); triggered = true; }
-      else if (s12 === 9) { audio.playHaegeum(dest, SCALE.G4, SCALE.D4, 0.3); triggered = true; }
-    } else if (idx === 3) {
-      if (s12 === 0) { audio.playHaegeum(dest, SCALE.G4, SCALE.A4, 0.38); triggered = true; }
-      else if (s12 === 5) { audio.playHaegeum(dest, SCALE.C5, SCALE.A4, 0.32); triggered = true; }
-      else if (s12 === 9) { audio.playHaegeum(dest, SCALE.F4, SCALE.D4, 0.35); triggered = true; }
-    } else {
-      if (!isSecondBar && (s12 === 0 || s12 === 6)) {
-        audio.playHaegeum(dest, s12 === 0 ? SCALE.D4 : SCALE.G4, s12 === 0 ? SCALE.A4 : SCALE.C5, 0.42); triggered = true;
-      } else if (isSecondBar && (s12 === 0 || s12 === 4 || s12 === 8)) {
-        audio.playHaegeum(dest, SCALE.C5, s12 === 8 ? SCALE.D4 : SCALE.A4, 0.36); triggered = true;
+      else if (s12 === 9) { audio.playHaegeum(dest, SCALE.G4, SCALE.D4, 0.32); triggered = true; }
+    } else if (idx === 2) {
+      if (!isSecondBar && (s12 === 0 || s12 === 3 || s12 === 6)) {
+        audio.playHaegeum(dest, s12 === 3 ? SCALE.F4 : SCALE.D4, s12 === 6 ? SCALE.A4 : SCALE.G4, 0.36); triggered = true;
+      } else if (isSecondBar && (s12 === 0 || s12 === 6 || s12 === 8 || s12 === 9)) {
+        audio.playHaegeum(dest, SCALE.C5, s12 === 9 ? SCALE.D4 : SCALE.A4, 0.28); triggered = true;
       }
+    } else if (idx === 3) {
+      if (s12 === 0) { audio.playHaegeum(dest, SCALE.G4, SCALE.A4, 0.35); triggered = true; }
+      else if (s12 === 3) { audio.playHaegeum(dest, SCALE.A4, SCALE.C5, 0.32); triggered = true; }
+      else if (s12 === 6) { audio.playHaegeum(dest, SCALE.C5, SCALE.G4, 0.35); triggered = true; }
+      else if (s12 === 8) { audio.playHaegeum(dest, SCALE.F4, SCALE.G4, 0.22); triggered = true; }
+      else if (s12 === 9) { audio.playHaegeum(dest, SCALE.F4, SCALE.D4, 0.32); triggered = true; }
+    } else {
+      // 밀도 4.0(선두 대장): 익살스럽고 경쾌한 시김새 리드
+      if (s12 === 0) { audio.playHaegeum(dest, SCALE.A4, SCALE.D5, 0.35); triggered = true; }
+      else if (s12 === 2) { audio.playHaegeum(dest, SCALE.C5, SCALE.A4, 0.22); triggered = true; }
+      else if (s12 === 3) { audio.playHaegeum(dest, SCALE.D5, SCALE.C5, 0.28); triggered = true; }
+      else if (s12 === 6) { audio.playHaegeum(dest, SCALE.G4, SCALE.A4, 0.32); triggered = true; }
+      else if (s12 === 8) { audio.playHaegeum(dest, SCALE.A4, SCALE.F4, 0.22); triggered = true; }
+      else if (s12 === 9) { audio.playHaegeum(dest, SCALE.F4, SCALE.D4, 0.32); triggered = true; }
     }
   }
 
   else if (id === 'taepyeongso') {
     if (idx === 0) {
       if (s12 === 0) { audio.playTaepyeongso(dest, SCALE.A4, 0.38); triggered = true; }
+      else if (s12 === 6) { audio.playTaepyeongso(dest, SCALE.D5, 0.38); triggered = true; }
     } else if (idx === 1) {
-      if (s12 === 0) { audio.playTaepyeongso(dest, SCALE.A4, 0.35); triggered = true; }
-      else if (s12 === 6) { audio.playTaepyeongso(dest, SCALE.G4, 0.35); triggered = true; }
+      if (s12 === 0) { audio.playTaepyeongso(dest, SCALE.D5, 0.32); triggered = true; }
+      else if (s12 === 6) { audio.playTaepyeongso(dest, SCALE.C5, 0.3); triggered = true; }
+      else if (s12 === 9) { audio.playTaepyeongso(dest, SCALE.A4, 0.34); triggered = true; }
     } else if (idx === 2) {
-      if (s12 === 0) { audio.playTaepyeongso(dest, SCALE.D5, 0.3); triggered = true; }
+      if (!isSecondBar && (s12 === 0 || s12 === 3 || s12 === 6 || s12 === 9)) {
+        const f = s12 === 0 ? SCALE.D5 : (s12 === 3 ? SCALE.C5 : (s12 === 6 ? SCALE.A4 : SCALE.G4));
+        audio.playTaepyeongso(dest, f, 0.28); triggered = true;
+      } else if (isSecondBar && (s12 === 0 || s12 === 6 || s12 === 8 || s12 === 9)) {
+        const f = s12 === 0 ? SCALE.F5 : (s12 === 6 ? SCALE.D5 : (s12 === 8 ? SCALE.C5 : SCALE.D5));
+        audio.playTaepyeongso(dest, f, 0.26); triggered = true;
+      }
+    } else if (idx === 3) {
+      if (s12 === 0) { audio.playTaepyeongso(dest, SCALE.D5, 0.28); triggered = true; }
+      else if (s12 === 2) { audio.playTaepyeongso(dest, SCALE.F5, 0.2); triggered = true; }
+      else if (s12 === 3) { audio.playTaepyeongso(dest, SCALE.D5, 0.26); triggered = true; }
       else if (s12 === 6) { audio.playTaepyeongso(dest, SCALE.C5, 0.28); triggered = true; }
       else if (s12 === 9) { audio.playTaepyeongso(dest, SCALE.A4, 0.32); triggered = true; }
-    } else if (idx === 3) {
-      if (s12 === 0) { audio.playTaepyeongso(dest, SCALE.C5, 0.3); triggered = true; }
-      else if (s12 === 5) { audio.playTaepyeongso(dest, SCALE.D5, 0.28); triggered = true; }
-      else if (s12 === 9) { audio.playTaepyeongso(dest, SCALE.A4, 0.32); triggered = true; }
     } else {
-      if (!isSecondBar && (s12 === 0 || s12 === 6)) {
-        audio.playTaepyeongso(dest, s12 === 0 ? SCALE.A4 : SCALE.C5, 0.34); triggered = true;
-      } else if (isSecondBar && (s12 === 0 || s12 === 4 || s12 === 8)) {
-        const f = s12 === 0 ? SCALE.D5 : (s12 === 4 ? SCALE.C5 : SCALE.A4);
-        audio.playTaepyeongso(dest, f, 0.3); triggered = true;
-      }
+      // 밀도 4.0(선두 대장): 시원하게 뻗는 호른 능계가락
+      if (s12 === 0) { audio.playTaepyeongso(dest, SCALE.D5, 0.26); triggered = true; }
+      else if (s12 === 2) { audio.playTaepyeongso(dest, SCALE.F5, 0.2); triggered = true; }
+      else if (s12 === 3) { audio.playTaepyeongso(dest, SCALE.G5, 0.28); triggered = true; }
+      else if (s12 === 6) { audio.playTaepyeongso(dest, SCALE.F5, 0.26); triggered = true; }
+      else if (s12 === 8) { audio.playTaepyeongso(dest, SCALE.D5, 0.2); triggered = true; }
+      else if (s12 === 9) { audio.playTaepyeongso(dest, SCALE.C5, 0.26); triggered = true; }
+      else if (isSecondBar && s12 === 11) { audio.playTaepyeongso(dest, SCALE.D5, 0.22); triggered = true; }
     }
   }
 
   else if (id === 'vocal') {
-    // 소리꾼: 글리산도 없이 긴 음을 끌되, hasOrnament가 true일 때 '뻐꾹(꺾는 목)' 구사
     if (idx === 0) {
-      if (s24 === 0) { audio.playVocal(dest, SCALE.A4, false, 0.88); triggered = true; }
+      if (s12 === 0) { audio.playVocal(dest, isSecondBar ? SCALE.D5 : SCALE.A4, true, 0.78); triggered = true; }
     } else if (idx === 1) {
-      if (s24 === 0) { audio.playVocal(dest, SCALE.A4, true, 0.85); triggered = true; }
+      if (s12 === 0) { audio.playVocal(dest, SCALE.A4, false, 0.72); triggered = true; }
+      else if (isSecondBar && s12 === 6) { audio.playVocal(dest, SCALE.D5, true, 0.72); triggered = true; }
     } else if (idx === 2) {
-      if (s12 === 0) { audio.playVocal(dest, isSecondBar ? SCALE.C5 : SCALE.A4, true, 0.75); triggered = true; }
+      if (s12 === 0) { audio.playVocal(dest, SCALE.A4, true, 0.68); triggered = true; }
+      else if (s12 === 6) { audio.playVocal(dest, isSecondBar ? SCALE.D5 : SCALE.C5, true, 0.68); triggered = true; }
     } else if (idx === 3) {
-      if (s24 === 0) { audio.playVocal(dest, SCALE.C5, true, 0.78); triggered = true; }
-      else if (s24 === 15) { audio.playVocal(dest, SCALE.A4, true, 0.68); triggered = true; }
+      if (s12 === 0) { audio.playVocal(dest, SCALE.C5, true, 0.65); triggered = true; }
+      else if (s12 === 6) { audio.playVocal(dest, SCALE.D5, true, 0.55); triggered = true; }
+      else if (isSecondBar && s12 === 9) { audio.playVocal(dest, SCALE.A4, true, 0.55); triggered = true; }
     } else {
-      // 밀도 3.0(최대): 첫 마디 1박에 길게 뻗고, 둘째 마디 1박과 3박에 '뻐꾹' 꺾어 부르기
-      if (!isSecondBar && s12 === 0) { audio.playVocal(dest, SCALE.A4, false, 0.82); triggered = true; }
-      else if (isSecondBar && (s12 === 0 || s12 === 6)) {
-        audio.playVocal(dest, s12 === 0 ? SCALE.D5 : SCALE.A4, true, 0.72); triggered = true;
-      }
+      // 밀도 4.0(선두 대장): 정박과 3박에 '뻐꾹' 꺾는 목을 구사하며 행렬을 지휘
+      if (s12 === 0) { audio.playVocal(dest, isSecondBar ? SCALE.D5 : SCALE.C5, true, 0.62); triggered = true; }
+      else if (s12 === 6) { audio.playVocal(dest, SCALE.A4, true, 0.55); triggered = true; }
+      else if (s12 === 9) { audio.playVocal(dest, isSecondBar ? SCALE.D5 : SCALE.G4, true, 0.52); triggered = true; }
     }
   }
 
   else if (id === 'joseon808') {
     if (idx === 0) {
-      if (s12 === 0) { audio.play808(dest, 'kick'); triggered = true; }
-      else if (s12 === 6) { audio.play808(dest, 'snare'); triggered = true; }
+      if (s12 === 0 || s12 === 6) { audio.play808(dest, 'kick'); triggered = true; }
+      else if (s12 === 3 || s12 === 9) { audio.play808(dest, 'snare'); triggered = true; }
     } else if (idx === 1) {
       if (s12 === 0 || s12 === 6) { audio.play808(dest, 'kick'); triggered = true; }
       else if (s12 === 3 || s12 === 9) { audio.play808(dest, 'snare'); triggered = true; }
-    } else if (idx === 2) {
-      if (s12 === 0 || s12 === 7) { audio.play808(dest, 'kick'); triggered = true; }
-      else if (s12 === 3 || s12 === 9) { audio.play808(dest, 'snare'); triggered = true; }
       else if (s12 === 2 || s12 === 8) { audio.play808(dest, 'hat'); }
-    } else if (idx === 3) {
-      if (s12 === 0 || s12 === 5 || s12 === 8) { audio.play808(dest, 'kick'); triggered = true; }
+    } else if (idx === 2) {
+      if (s12 === 0 || s12 === 5 || s12 === 6) { audio.play808(dest, 'kick'); triggered = true; }
       else if (s12 === 3 || s12 === 9) { audio.play808(dest, 'snare'); triggered = true; }
       else if (s12 % 3 === 2) { audio.play808(dest, 'hat'); }
-    } else {
-      if (!isSecondBar && (s12 === 0 || s12 === 7)) { audio.play808(dest, 'kick'); triggered = true; }
-      else if (isSecondBar && (s12 === 0 || s12 === 4 || s12 === 8)) { audio.play808(dest, 'kick'); triggered = true; }
+    } else if (idx === 3) {
+      if (s12 === 0 || s12 === 2 || s12 === 6 || s12 === 8) { audio.play808(dest, 'kick'); triggered = true; }
       else if (s12 === 3 || s12 === 9) { audio.play808(dest, 'snare'); triggered = true; }
+      else { audio.play808(dest, 'hat'); }
+    } else {
+      // 밀도 4.0(선두 대장): 정통 붐뱁 셔플 드럼 + 둘째마디 끝 스네어 롤
+      if (s12 === 0 || s12 === 2 || s12 === 5 || s12 === 6 || s12 === 8) { audio.play808(dest, 'kick'); triggered = true; }
+      else if (s12 === 3 || s12 === 9 || (isSecondBar && s12 === 11)) { audio.play808(dest, 'snare'); triggered = true; }
+      else { audio.play808(dest, 'hat'); }
     }
   }
 
@@ -2575,7 +2810,7 @@ function triggerInstrumentBySlotStyle(id, idx, s12, s24, isSecondBar, dest) {
 }
 
 function runStep() {
-  if (finaleState === 'entering_gate' || finaleState === 'ended') return;
+  if (finaleState === 'entering_gate' || finaleState === 'ended' || finaleState === 'stat_showdown') return;
   audio.lastStepTimeMs = performance.now();
 
   const s12 = audio.step % 12;
@@ -2615,7 +2850,7 @@ function runStep() {
         if (battleState.turn === 'rival') {
           battleState.turn = 'player';
           battleState.stepInBar = 0;
-          document.getElementById('lastHitJudgeText').textContent = '지금 꽹과리를 두드리시오!';
+          document.getElementById('lastHitJudgeText').textContent = '지금 꽹과리를 두드리시오! (오타 감점 주의!)';
           document.getElementById('lastHitJudgeText').className = 'text-xs sm:text-sm font-bold text-amber-300 h-4';
           updateBattleDeckUI();
         } else {
@@ -2628,7 +2863,7 @@ function runStep() {
             document.getElementById('battleDeckContainer').classList.add('hidden');
             document.getElementById('pickWindowContainer').classList.remove('hidden');
             document.getElementById('finaleMainTitle').textContent = '👑 어전이오! 왕을 위한 승리의 피날레 연주를 뽐내시오! 👑';
-            updateNarrative(0, `8합 짝쇠 대결 완료! (${battleState.battleScore}/50점 획득) 이제 어전 스포트라이트 피날레를 즐기시오!`);
+            updateNarrative(0, `8합 맞쇠 대결 완료! (${battleState.battleScore}/50점 획득) 이제 어전 스포트라이트 피날레를 즐기시오!`);
           } else {
             battleState.turn = 'rival';
             battleState.stepInBar = 0;
@@ -2660,7 +2895,7 @@ function runStep() {
     evaluateMeasureHeung();
   }
 
-  const bgVol = finaleState === 'kkwaeng_battle' ? 0.42 : null;
+  const bgVol = finaleState === 'kkwaeng_battle' ? 0.38 : null;
   slots.forEach((marcher, idx) => {
     if (!marcher || marcher.muted || (hasSolo && !marcher.solo)) return;
 
